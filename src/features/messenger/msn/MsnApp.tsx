@@ -505,7 +505,7 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
                 </div>
                 <div className="msn-online-toast-copy">
                   <strong>{notification.contact.nick}</strong>
-                  <span>acabou de entrar.</span>
+                  <span>has just signed in.</span>
                 </div>
               </div>
               <button
@@ -513,7 +513,7 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
                 onClick={(event) => event.stopPropagation()}
                 type="button"
               >
-                Opcoes
+                Options
               </button>
             </div>
           ))}
