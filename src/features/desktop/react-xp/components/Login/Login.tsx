@@ -35,9 +35,9 @@ const Login = ({ user }: LoginProps) => {
         if (windowsInitiationState !== "shutDown") return;
 
         const timeouts = [
-            [5000, "Well, what did you expect?"],
+            [5000, "Fim da sessao."],
             [13000, null],
-            [16000, "Just refresh the window or something."]
+            [16000, "Atualize a pagina para ligar novamente."]
         ];
 
         const timers = timeouts.map(([delay, message]) =>
@@ -74,7 +74,7 @@ const Login = ({ user }: LoginProps) => {
 
                 {(windowsInitiationState === "welcome") && (
                     <main className="flex h-6/7 px-8">
-                        <h1 className="text-9xl">Welcome</h1>
+                        <h1 className="text-9xl">Bem-vindo</h1>
                     </main>
                 )}
 
@@ -93,10 +93,10 @@ const Login = ({ user }: LoginProps) => {
                             {(windowsInitiationState !== "loggingIn") && (
                                 <>
                                     <img className="mb-6" src="/logo__windows_xp.png" height="150" width="150" />
-                                    <h3 className="text-right">To begin, click your user name</h3>
+                                    <h3 className="text-right">Para comecar, clique no seu nome de usuario</h3>
                                 </>
                             )}
-                            {(windowsInitiationState === "loggingIn") && <h1 className={styles.loginMsg}>Welcome</h1>}
+                            {(windowsInitiationState === "loggingIn") && <h1 className={styles.loginMsg}>Bem-vindo</h1>}
                         </div>
                         <span className={`${styles.seperator} m-9`}></span>
                         <div className="flex flex-col justify-center">
@@ -104,8 +104,8 @@ const Login = ({ user }: LoginProps) => {
                                 <img className={`${styles.avatar} m-1.5`} width="50" height="50" data-init-state={windowsInitiationState} src="/avatar__skateboard.png" />
                                 <div className={`${styles.userNameContainer} flex flex-col`}>
                                     <h3  data-init-state={windowsInitiationState}>{user}</h3>
-                                    {!isInitialBoot && currentWindows.length > 0 && <p className="font-bold">{currentWindows.length} program{currentWindows.length > 1 ? "s" : ""} running.</p>}
-                                    {currentWindows.length === 0 && windowsInitiationState === "loggingIn" && <p className="font-bold text-[#102f96]">Loading your personal settings...</p>}
+                                    {!isInitialBoot && currentWindows.length > 0 && <p className="font-bold">{currentWindows.length} programa{currentWindows.length > 1 ? "s" : ""} em execucao.</p>}
+                                    {currentWindows.length === 0 && windowsInitiationState === "loggingIn" && <p className="font-bold text-[#102f96]">Carregando suas configuracoes pessoais...</p>}
                                 </div>
                             </button>
                         </div>
@@ -118,10 +118,10 @@ const Login = ({ user }: LoginProps) => {
                             <>
                                 <button className={`${styles.shutDown} flex items-center mb-4`} onClick={() => onShutDownModalButtonHandler()}>
                                     <img className="mr-3" width="22" height="22" src="/icon__shut_down--large.png" />
-                                    <h3>Turn off Computer</h3>
+                                    <h3>Desligar computador</h3>
                                 </button>
                                 <div className="max-w-90">
-                                    <p>After you log on, you can add or change accounts. Just go to Control Panel and click User Accounts.</p>
+                                    <p>Depois de fazer logon, voce pode explorar os programas e arquivos disponiveis.</p>
                                 </div>
                             </>
                         )}

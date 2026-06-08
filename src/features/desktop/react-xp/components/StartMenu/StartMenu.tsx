@@ -60,7 +60,7 @@ const StartMenu = ({ startButton }: StartMenuProps) => {
         <div ref={startMenuRef} className={`${styles.startMenu} bg-[#3e75d8] absolute z-10 left-0 bottom-12`}>
             <header className="flex items-center p-3">
                 <img src="/avatar__skateboard.png" className="mr-3" width="50" height="50" />
-                <h1>User</h1>
+                <h1>Visitante</h1>
             </header>
             <main className="flex">
                 <section className="bg-white text-[#373738] flex flex-col justify-between">
