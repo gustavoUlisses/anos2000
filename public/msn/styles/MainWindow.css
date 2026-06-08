@@ -61,3 +61,7 @@ summary {
 details {
   user-select: none;
 }
+
+.logout-button {
+  min-width: 44px;
+}

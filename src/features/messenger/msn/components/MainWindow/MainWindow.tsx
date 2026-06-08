@@ -13,6 +13,7 @@ type MainWindowProps = {
   isRealtimeConfigured: boolean;
   onClose: () => void;
   onLogin: (nick: string, password?: string) => Promise<void>;
+  onLogout: () => void;
   onMinimize: () => void;
   onOpenChat: (contact: MsnContact) => void;
   profile: MsnProfile | null;
@@ -23,6 +24,7 @@ export function MainWindow({
   isRealtimeConfigured,
   onClose,
   onLogin,
+  onLogout,
   onMinimize,
   onOpenChat,
   profile,
@@ -54,6 +56,7 @@ export function MainWindow({
           <MainWindowLogged
             contacts={contacts}
             isRealtimeConfigured={isRealtimeConfigured}
+            onLogout={onLogout}
             onOpenChat={onOpenChat}
             profile={profile}
           />

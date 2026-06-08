@@ -71,6 +71,11 @@ function storeProfile(profile: MsnProfile) {
   localStorage.setItem(profileStorageKey, JSON.stringify(profile));
 }
 
+function clearStoredSession() {
+  localStorage.removeItem(profileStorageKey);
+  localStorage.removeItem(clientIdStorageKey);
+}
+
 function isUuid(value: string | null | undefined) {
   return Boolean(value?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i));
 }
@@ -272,6 +277,13 @@ export function useMsnRealtime() {
     setOnlineProfiles((current) => dedupeProfiles([...current, nextProfile]));
   }, []);
 
+  const logout = useCallback(() => {
+    clearStoredSession();
+    setMessages([]);
+    setOnlineProfiles([]);
+    setProfile(null);
+  }, []);
+
   const loadConversation = useCallback(async (contactId: string) => {
     if (!profile) {
       return;
@@ -388,6 +400,8 @@ export function useMsnRealtime() {
     isRealtimeConfigured: Boolean(supabase),
     loadConversation,
     login,
+    logout,
+    messages,
     profile,
     sendMessage,
   };
