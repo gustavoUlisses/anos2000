@@ -10,6 +10,10 @@ const profileStorageKey = "anos2000:msn:profile";
 const gusDevId = "gusdev-offline";
 
 type PresencePayload = MsnProfile;
+type PresenceStatusPayload = {
+  profile: MsnProfile;
+  status: "offline";
+};
 
 function createId() {
   if (crypto.randomUUID) {
@@ -128,6 +132,19 @@ function isMsnMessage(value: unknown): value is MsnMessage {
   );
 }
 
+function isPresenceStatusPayload(value: unknown): value is PresenceStatusPayload {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<PresenceStatusPayload>;
+
+  return (
+    candidate.status === "offline" &&
+    Boolean(candidate.profile?.id && candidate.profile.nick)
+  );
+}
+
 function dedupeMessages(messages: MsnMessage[]) {
   const seenIds = new Set<string>();
 
@@ -226,6 +243,21 @@ async function persistPersonalMessage(profileId: string, personalMessage: string
   }).catch(() => undefined);
 }
 
+async function announceOffline(channel: RealtimeChannel | null, profile: MsnProfile | null) {
+  if (!channel || !profile) {
+    return;
+  }
+
+  await channel.send({
+    event: "presence-status",
+    payload: {
+      profile,
+      status: "offline",
+    },
+    type: "broadcast",
+  }).catch(() => undefined);
+}
+
 export function useMsnRealtime() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -274,6 +306,13 @@ export function useMsnRealtime() {
 
         setMessages((current) => dedupeMessages([...current, payload]));
       })
+      .on("broadcast", { event: "presence-status" }, ({ payload }: { payload: unknown }) => {
+        if (!isPresenceStatusPayload(payload) || payload.profile.id === profile.id) {
+          return;
+        }
+
+        setOnlineProfiles((current) => current.filter((onlineProfile) => onlineProfile.id !== payload.profile.id));
+      })
       .subscribe(async (status) => {
         if (status !== "SUBSCRIBED") {
           return;
@@ -293,6 +332,7 @@ export function useMsnRealtime() {
     }, 25_000);
 
     function untrackPresence() {
+      void announceOffline(channel, profile);
       void channel.untrack();
     }
 
@@ -317,12 +357,21 @@ export function useMsnRealtime() {
     setOnlineProfiles((current) => dedupeProfiles([...current, nextProfile]));
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    const channel = channelRef.current;
+    await announceOffline(channel, profile);
+
+    if (channel) {
+      await channel.untrack().catch(() => undefined);
+      channelRef.current = null;
+      void supabase?.removeChannel(channel);
+    }
+
     clearStoredSession();
     setMessages([]);
     setOnlineProfiles([]);
     setProfile(null);
-  }, []);
+  }, [profile, supabase]);
 
   const updatePersonalMessage = useCallback((rawMessage: string) => {
     if (!profile) {

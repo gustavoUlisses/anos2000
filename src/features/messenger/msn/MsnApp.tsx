@@ -95,7 +95,7 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
     setShowLoginWindow(true);
     handledIncomingMessageIds.current.clear();
     offlineNotifiedContactIds.current.clear();
-    messenger.logout();
+    void messenger.logout();
   }
 
   function playIncomingMessageAlert() {
