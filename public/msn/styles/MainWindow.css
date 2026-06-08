@@ -116,6 +116,7 @@ details {
 
 .msn-account-footer {
   bottom: 5px;
+  justify-content: flex-end !important;
   left: 8px;
   padding-left: 0;
   padding-right: 0;
