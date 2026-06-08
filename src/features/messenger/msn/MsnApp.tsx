@@ -12,13 +12,20 @@ type MsnAppProps = {
   onTaskbarItemsChange: (items: MessengerTaskbarItem[]) => void;
 };
 
+type OpenChat = {
+  attention: boolean;
+  contact: MsnContact;
+  minimized: boolean;
+};
+
+const msnMainTaskbarId = "msn-main";
+const msnChatTaskbarPrefix = "msn-chat:";
+
 export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
   const messenger = useMsnRealtime();
-  const [activeContact, setActiveContact] = useState<MsnContact | null>(null);
+  const [openChats, setOpenChats] = useState<OpenChat[]>([]);
   const [showLoginWindow, setShowLoginWindow] = useState(true);
   const [isLoginMinimized, setIsLoginMinimized] = useState(false);
-  const [isChatMinimized, setIsChatMinimized] = useState(false);
-  const [hasChatAttention, setHasChatAttention] = useState(false);
   const handledIncomingMessageIds = useRef<Set<string>>(new Set());
   const mountedAt = useRef(0);
 
@@ -29,33 +36,56 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
   function closeLoginWindow() {
     setShowLoginWindow(false);
 
-    if (!activeContact) {
+    if (!openChats.length) {
       onClose();
     }
   }
 
-  function closeChatWindow() {
-    setActiveContact(null);
-    setHasChatAttention(false);
+  function closeChatWindow(contactId: string) {
+    setOpenChats((current) => current.filter((chat) => chat.contact.id !== contactId));
 
-    if (!showLoginWindow) {
+    if (!showLoginWindow && openChats.length <= 1) {
       onClose();
     }
   }
 
   async function openChat(contact: MsnContact) {
-    setActiveContact(contact);
-    setIsChatMinimized(false);
-    setHasChatAttention(false);
+    setOpenChats((current) => {
+      const existingChat = current.find((chat) => chat.contact.id === contact.id);
+
+      if (existingChat) {
+        return current.map((chat) => (
+          chat.contact.id === contact.id
+            ? { ...chat, attention: false, contact, minimized: false }
+            : chat
+        ));
+      }
+
+      return [...current, { attention: false, contact, minimized: false }];
+    });
     await messenger.loadConversation(contact.id);
   }
 
+  function minimizeChat(contactId: string) {
+    setOpenChats((current) => current.map((chat) => (
+      chat.contact.id === contactId
+        ? { ...chat, attention: false, minimized: true }
+        : chat
+    )));
+  }
+
+  function restoreChat(contactId: string) {
+    setOpenChats((current) => current.map((chat) => (
+      chat.contact.id === contactId
+        ? { ...chat, attention: false, minimized: false }
+        : chat
+    )));
+  }
+
   function logout() {
-    setActiveContact(null);
-    setIsChatMinimized(false);
+    setOpenChats([]);
     setIsLoginMinimized(false);
     setShowLoginWindow(true);
-    setHasChatAttention(false);
     handledIncomingMessageIds.current.clear();
     messenger.logout();
   }
@@ -83,30 +113,49 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
       return;
     }
 
-    const incomingMessage = messenger.messages.findLast((message) => (
+    const incomingMessages = messenger.messages.filter((message) => (
       message.senderId !== messenger.profile?.id &&
       message.recipientId === messenger.profile?.id &&
       new Date(message.createdAt).getTime() >= mountedAt.current &&
       !handledIncomingMessageIds.current.has(message.id)
     ));
 
-    if (!incomingMessage) {
+    if (!incomingMessages.length) {
       return;
     }
 
-    handledIncomingMessageIds.current.add(incomingMessage.id);
+    incomingMessages.forEach((message) => handledIncomingMessageIds.current.add(message.id));
     playIncomingMessageAlert();
 
-    const incomingContact = contactFromIncomingMessage(incomingMessage);
-    const isCurrentVisibleChat = activeContact?.id === incomingContact.id && !isChatMinimized;
+    setOpenChats((current) => {
+      const nextChats = [...current];
 
-    setActiveContact(incomingContact);
+      for (const message of incomingMessages) {
+        const incomingContact = contactFromIncomingMessage(message);
+        const existingIndex = nextChats.findIndex((chat) => chat.contact.id === incomingContact.id);
 
-    if (!isCurrentVisibleChat) {
-      setIsChatMinimized(true);
-      setHasChatAttention(true);
-    }
-  }, [activeContact, contactFromIncomingMessage, isChatMinimized, messenger.messages, messenger.profile]);
+        if (existingIndex >= 0) {
+          const existingChat = nextChats[existingIndex];
+          const isVisible = !existingChat.minimized;
+          nextChats[existingIndex] = {
+            ...existingChat,
+            attention: isVisible ? existingChat.attention : true,
+            contact: incomingContact,
+            minimized: isVisible ? existingChat.minimized : true,
+          };
+          continue;
+        }
+
+        nextChats.push({
+          attention: true,
+          contact: incomingContact,
+          minimized: true,
+        });
+      }
+
+      return nextChats;
+    });
+  }, [contactFromIncomingMessage, messenger.messages, messenger.profile]);
 
   useEffect(() => {
     const items: MessengerTaskbarItem[] = [];
@@ -114,34 +163,37 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
     if (isLoginMinimized) {
       items.push({
         icon: "/msn/images/msn.webp",
-        id: "msn-main",
+        id: msnMainTaskbarId,
         title: "Windows Live Messenger",
       });
     }
 
-    if (isChatMinimized && activeContact) {
+    for (const chat of openChats) {
+      if (!chat.minimized) {
+        continue;
+      }
+
       items.push({
-        attention: hasChatAttention,
+        attention: chat.attention,
         icon: "/msn/images/msn.webp",
-        id: "msn-chat",
-        title: activeContact.nick,
+        id: `${msnChatTaskbarPrefix}${chat.contact.id}`,
+        title: chat.contact.nick,
       });
     }
 
     onTaskbarItemsChange(items);
-  }, [activeContact, hasChatAttention, isChatMinimized, isLoginMinimized, onTaskbarItemsChange]);
+  }, [isLoginMinimized, onTaskbarItemsChange, openChats]);
 
   useEffect(() => {
     function restoreFromTaskbar(event: Event) {
       const itemId = (event as CustomEvent<{ id?: string }>).detail?.id;
 
-      if (itemId === "msn-main") {
+      if (itemId === msnMainTaskbarId) {
         setIsLoginMinimized(false);
       }
 
-      if (itemId === "msn-chat") {
-        setIsChatMinimized(false);
-        setHasChatAttention(false);
+      if (itemId?.startsWith(msnChatTaskbarPrefix)) {
+        restoreChat(itemId.slice(msnChatTaskbarPrefix.length));
       }
     }
 
@@ -152,6 +204,8 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
       onTaskbarItemsChange([]);
     };
   }, [onTaskbarItemsChange]);
+
+  const currentProfile = messenger.profile;
 
   return (
     <div className="msn-app">
@@ -173,20 +227,19 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
         <div style={{ width: "300px", height: "550px" }} />
       )}
 
-      {activeContact && !isChatMinimized && messenger.profile ? (
-        <div className="msn-window-slot">
-          <ChatWindow
-            contact={activeContact}
-            currentProfile={messenger.profile}
-            messages={messenger.getConversation(activeContact.id)}
-            onClose={closeChatWindow}
-            onMinimize={() => {
-              setHasChatAttention(false);
-              setIsChatMinimized(true);
-            }}
-            onSendMessage={(parts) => messenger.sendMessage(activeContact, parts)}
-          />
-        </div>
+      {currentProfile && openChats.some((chat) => !chat.minimized) ? (
+        openChats.filter((chat) => !chat.minimized).map((chat) => (
+          <div className="msn-window-slot" key={chat.contact.id}>
+            <ChatWindow
+              contact={chat.contact}
+              currentProfile={currentProfile}
+              messages={messenger.getConversation(chat.contact.id)}
+              onClose={() => closeChatWindow(chat.contact.id)}
+              onMinimize={() => minimizeChat(chat.contact.id)}
+              onSendMessage={(parts) => messenger.sendMessage(chat.contact, parts)}
+            />
+          </div>
+        ))
       ) : (
         <div style={{ width: "500px", height: "550px" }} />
       )}
