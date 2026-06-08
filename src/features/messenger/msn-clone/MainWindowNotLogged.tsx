@@ -1,23 +1,20 @@
 import type { FormEvent } from "react";
 
 type MainWindowNotLoggedProps = {
-  nick: string;
-  setNick: (nick: string) => void;
   status: string;
   setStatus: (status: string) => void;
-  onLogin: () => void;
+  onLogin: (email: string) => void;
 };
 
 export function MainWindowNotLogged({
-  nick,
   onLogin,
-  setNick,
   setStatus,
   status,
 }: MainWindowNotLoggedProps) {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    onLogin();
+    const formData = new FormData(event.currentTarget);
+    onLogin(String(formData.get("email") ?? ""));
   }
 
   return (
@@ -29,15 +26,22 @@ export function MainWindowNotLogged({
           </div>
           <form className="px-4" onSubmit={handleSubmit}>
             <div className="mb-2 d-flex flex-column">
-              <label htmlFor="messengerNickInput">Apelido:</label>
+              <label htmlFor="emailInput">E-mail address:</label>
               <input
-                type="text"
+                type="email"
                 className="border border-secondary"
-                id="messengerNickInput"
-                maxLength={24}
-                onChange={(event) => setNick(event.target.value)}
-                placeholder="Digite seu nick"
-                value={nick}
+                id="emailInput"
+                name="email"
+              />
+            </div>
+            <div className="mb-2 d-flex flex-column">
+              <label htmlFor="passwordInput">Password:</label>
+              <input
+                type="password"
+                className="border border-secondary"
+                id="passwordInput"
+                name="password"
+                autoComplete="on"
               />
             </div>
             <div className="d-flex gap-1">
@@ -55,17 +59,17 @@ export function MainWindowNotLogged({
             </div>
             <div className="d-flex gap-1 mt-4">
               <input type="checkbox" name="rememberMeInput" id="rememberMeInput" />
-              <label htmlFor="rememberMeInput">Lembrar de mim</label>
+              <label htmlFor="rememberMeInput">Remember me</label>
             </div>
             <div className="text-center">
-              <button className="my-3 px-3 text-center" type="submit">Entrar</button>
+              <button className="my-3 px-3 text-center" type="submit">Sign in</button>
             </div>
           </form>
         </div>
         <div className="links px-4 d-flex flex-column text-primary">
-          <span role="button">Criar apelido temporario</span>
-          <span role="button">Status do servico</span>
-          <span role="button">Entrar como visitante</span>
+          <span role="button">Forgot your password?</span>
+          <span role="button">Service status</span>
+          <span role="button">Sign up htmlFor a Windows Live ID</span>
         </div>
       </div>
       <div className="position-absolute bottom-0 py-1">

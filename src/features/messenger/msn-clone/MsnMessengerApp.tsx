@@ -52,7 +52,13 @@ export function MsnMessengerApp({ onClose }: MsnMessengerAppProps) {
 
   const displayNick = nick.trim() || "Visitante";
 
-  function login() {
+  function login(email: string) {
+    const normalizedEmail = email.trim();
+    const emailNick = normalizedEmail.includes("@")
+      ? normalizedEmail.split("@")[0]
+      : normalizedEmail;
+
+    setNick(emailNick);
     setIsLoading(true);
 
     window.setTimeout(() => {
@@ -110,9 +116,7 @@ export function MsnMessengerApp({ onClose }: MsnMessengerAppProps) {
 
           {!isLoggedIn && !isLoading && (
             <MainWindowNotLogged
-              nick={nick}
               onLogin={login}
-              setNick={setNick}
               setStatus={setStatus}
               status={status}
             />

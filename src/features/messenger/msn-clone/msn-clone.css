@@ -132,6 +132,21 @@
   font-size: 12px;
 }
 
+.msn-clone input[type="email"],
+.msn-clone input[type="password"] {
+  background: #fff;
+  color: #111;
+  font-size: 12px;
+  height: 22px;
+}
+
+.msn-clone input[type="checkbox"] {
+  accent-color: #fff;
+  appearance: auto;
+  height: 13px;
+  width: 13px;
+}
+
 .msn-clone input[type="search"]::placeholder {
   color: rgb(155, 155, 155);
 }
