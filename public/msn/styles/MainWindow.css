@@ -46,6 +46,7 @@
   box-shadow: 2px 2px 4px 0px #b9b9b9;
   border: 1px solid #b9b9b9;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -71,14 +72,15 @@ details {
 .logged-window-content {
   display: flex;
   flex-direction: column;
-  gap: 5px;
   height: 100%;
+  min-height: 0;
 }
 
 .logged-window-main {
   display: flex;
   flex: 1;
   flex-direction: column;
+  gap: 5px;
   min-height: 0;
 }
 
@@ -110,6 +112,7 @@ details {
 }
 
 .msn-account-footer {
+  flex: 0 0 28px;
   padding-left: 2px;
   padding-right: 8px;
 }
