@@ -1,0 +1,42 @@
+create extension if not exists "pgcrypto";
+
+create table if not exists public.profiles (
+  id uuid primary key default gen_random_uuid(),
+  nick text not null unique,
+  is_admin boolean not null default false,
+  created_at timestamptz not null default now(),
+  last_seen_at timestamptz
+);
+
+create table if not exists public.chat_messages (
+  id uuid primary key default gen_random_uuid(),
+  channel text not null check (channel in ('msn', 'uol')),
+  room_id text,
+  sender_id uuid not null references public.profiles(id) on delete cascade,
+  recipient_id uuid references public.profiles(id) on delete set null,
+  body text not null check (char_length(body) between 1 and 1000),
+  created_at timestamptz not null default now()
+);
+
+alter table public.profiles enable row level security;
+alter table public.chat_messages enable row level security;
+
+create policy "profiles are readable"
+on public.profiles
+for select
+using (true);
+
+create policy "anonymous users can create non-admin profiles"
+on public.profiles
+for insert
+with check (is_admin = false and lower(nick) <> 'gusdev');
+
+create policy "messages are readable for realtime MVP"
+on public.chat_messages
+for select
+using (true);
+
+create policy "anonymous users can send messages"
+on public.chat_messages
+for insert
+with check (char_length(body) between 1 and 1000);
