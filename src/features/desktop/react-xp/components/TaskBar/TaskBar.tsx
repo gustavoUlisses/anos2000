@@ -10,7 +10,7 @@ import type { Application } from "../../context/types";
 const applications = applicationsJSON as unknown as Record<string, Application>;
 
 const TaskBar = () => {
-    const { currentTime, currentWindows, isStartVisible, dispatch } = useContext();
+    const { currentTime, currentWindows, isStartVisible, messengerTaskbarItems, dispatch } = useContext();
     const [systemTrayIconDismissed, setSystemTrayIconDismissed] = useState(false);
     const startButtonRef = useRef<HTMLButtonElement | null>(null);
     const startButton = startButtonRef.current;
@@ -45,6 +45,12 @@ const TaskBar = () => {
 
     const systemTrayIconClickHandler = () => {
         if (systemTrayIconDismissed) setSystemTrayIconDismissed(false);
+    };
+
+    const messengerTaskbarClickHandler = (itemId: string) => {
+        window.dispatchEvent(new CustomEvent("anos2000:msn-taskbar-click", {
+            detail: { id: itemId },
+        }));
     };
 
     const startButtonClickHandler = (event: React.MouseEvent) => {
@@ -83,6 +89,14 @@ const TaskBar = () => {
                         </li>
                     );
                 })}
+                {messengerTaskbarItems.map((item) => (
+                    <li key={item.id} onClick={() => messengerTaskbarClickHandler(item.id)} data-active={false}>
+                        <span className="w-full relative flex">
+                            <img src={item.icon} width="14" height="14" className="mr-2 min-w-5.5"></img>
+                            <span className="absolute ml-7">{item.title}</span>
+                        </span>
+                    </li>
+                ))}
             </ul>
             <div className={`${styles.systemTray} flex justify-center items-center`}>
                 <ul className="flex">

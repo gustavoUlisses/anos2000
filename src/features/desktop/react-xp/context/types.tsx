@@ -23,6 +23,12 @@ export interface currentWindow {
 }
 export type currentWindows = currentWindow[];
 
+export interface MessengerTaskbarItem {
+    icon: string;
+    id: "msn-main" | "msn-chat";
+    title: string;
+}
+
 export interface AbsoluteObject {
     top?: number | undefined;
     right?: number | undefined;
@@ -62,6 +68,7 @@ export interface State {
     initiationStage: number;
     isInitialBoot: boolean;
     isMessengerOpen: boolean;
+    messengerTaskbarItems: MessengerTaskbarItem[];
     transitionLabel: string;
     isCRTEnabled: boolean;
     themeColor: themeColor;
@@ -79,6 +86,7 @@ export type Action =
     | { type: "SET_INITIATION_STAGE"; payload: number; }
     | { type: "SET_IS_INITIAL_BOOT"; payload: boolean; }
     | { type: "SET_IS_MESSENGER_OPEN"; payload: boolean; }
+    | { type: "SET_MESSENGER_TASKBAR_ITEMS"; payload: MessengerTaskbarItem[]; }
     | { type: "SET_TRANSITION_LABEL"; payload: string; }
     | { type: "SET_IS_CRT_ENABLED"; payload: boolean; }
     | { type: "SET_THEME_COLOR"; payload: themeColor;}

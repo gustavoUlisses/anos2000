@@ -3,9 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { MsnApp } from "./MsnApp";
+import type { MessengerTaskbarItem } from "@/features/desktop/react-xp/context/types";
 
 type MsnMessengerAppProps = {
   onClose: () => void;
+  onTaskbarItemsChange: (items: MessengerTaskbarItem[]) => void;
 };
 
 const stylesheets = [
@@ -53,7 +55,7 @@ function appendStylesheet(shadowRoot: ShadowRoot, href: string) {
   });
 }
 
-export function MsnMessengerApp({ onClose }: MsnMessengerAppProps) {
+export function MsnMessengerApp({ onClose, onTaskbarItemsChange }: MsnMessengerAppProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const [mountNode, setMountNode] = useState<HTMLDivElement | null>(null);
 
@@ -100,7 +102,7 @@ export function MsnMessengerApp({ onClose }: MsnMessengerAppProps) {
         zIndex: 40,
       }}
     >
-      {mountNode ? createPortal(<MsnApp onClose={onClose} />, mountNode) : null}
+      {mountNode ? createPortal(<MsnApp onClose={onClose} onTaskbarItemsChange={onTaskbarItemsChange} />, mountNode) : null}
     </div>
   );
 }

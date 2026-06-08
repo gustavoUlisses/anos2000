@@ -1,14 +1,19 @@
-import { Activity, useEffect } from "react";
+import { Activity, useCallback, useEffect } from "react";
 import Desktop from "./components/Desktop/Desktop";
 import Login from "./components/Login/Login";
 import TaskBar from "./components/TaskBar/TaskBar";
 import Wallpaper from "./components/Wallpaper/Wallpaper";
 import WindowManagement from "./components/WindowManagement/WindowManagement";
 import { useContext } from "./context/context";
+import type { MessengerTaskbarItem } from "./context/types";
 import { MsnMessengerApp } from "@/features/messenger/msn/MsnMessengerApp";
 
 function App() {
     const {windowsInitiationState, isInitialBoot, initiationStage, isMessengerOpen, dispatch} = useContext();
+
+    const handleMessengerTaskbarItemsChange = useCallback((items: MessengerTaskbarItem[]) => {
+        dispatch({ type: "SET_MESSENGER_TASKBAR_ITEMS", payload: items });
+    }, [dispatch]);
 
     useEffect(() => {
         const delayMap = [500, 500, 500];
@@ -40,7 +45,13 @@ function App() {
                 <WindowManagement />
             </Activity>
             {initiationStage > 0 && isMessengerOpen && (
-                <MsnMessengerApp onClose={() => dispatch({ type: "SET_IS_MESSENGER_OPEN", payload: false })} />
+                <MsnMessengerApp
+                    onClose={() => {
+                        dispatch({ type: "SET_MESSENGER_TASKBAR_ITEMS", payload: [] });
+                        dispatch({ type: "SET_IS_MESSENGER_OPEN", payload: false });
+                    }}
+                    onTaskbarItemsChange={handleMessengerTaskbarItemsChange}
+                />
             )}
         </>
     );

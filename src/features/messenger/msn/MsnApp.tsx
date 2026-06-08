@@ -4,13 +4,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatWindow } from "./components/ChatWindow/ChatWindow";
 import { MainWindow } from "./components/MainWindow/MainWindow";
 import { useMsnRealtime } from "./useMsnRealtime";
+import type { MessengerTaskbarItem } from "@/features/desktop/react-xp/context/types";
 import type { MsnContact, MsnMessage } from "./types";
 
 type MsnAppProps = {
   onClose: () => void;
+  onTaskbarItemsChange: (items: MessengerTaskbarItem[]) => void;
 };
 
-export function MsnApp({ onClose }: MsnAppProps) {
+export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
   const messenger = useMsnRealtime();
   const [activeContact, setActiveContact] = useState<MsnContact | null>(null);
   const [showLoginWindow, setShowLoginWindow] = useState(true);
@@ -82,6 +84,49 @@ export function MsnApp({ onClose }: MsnAppProps) {
     setIsChatMinimized(false);
   }, [contactFromIncomingMessage, messenger.messages, messenger.profile]);
 
+  useEffect(() => {
+    const items: MessengerTaskbarItem[] = [];
+
+    if (isLoginMinimized) {
+      items.push({
+        icon: "/msn/favicon.ico",
+        id: "msn-main",
+        title: "Windows Live Messenger",
+      });
+    }
+
+    if (isChatMinimized && activeContact) {
+      items.push({
+        icon: "/msn/favicon.ico",
+        id: "msn-chat",
+        title: activeContact.nick,
+      });
+    }
+
+    onTaskbarItemsChange(items);
+  }, [activeContact, isChatMinimized, isLoginMinimized, onTaskbarItemsChange]);
+
+  useEffect(() => {
+    function restoreFromTaskbar(event: Event) {
+      const itemId = (event as CustomEvent<{ id?: string }>).detail?.id;
+
+      if (itemId === "msn-main") {
+        setIsLoginMinimized(false);
+      }
+
+      if (itemId === "msn-chat") {
+        setIsChatMinimized(false);
+      }
+    }
+
+    window.addEventListener("anos2000:msn-taskbar-click", restoreFromTaskbar);
+
+    return () => {
+      window.removeEventListener("anos2000:msn-taskbar-click", restoreFromTaskbar);
+      onTaskbarItemsChange([]);
+    };
+  }, [onTaskbarItemsChange]);
+
   return (
     <div className="msn-app">
       {showLoginWindow && !isLoginMinimized ? (
@@ -117,20 +162,6 @@ export function MsnApp({ onClose }: MsnAppProps) {
         <div style={{ width: "500px", height: "550px" }} />
       )}
 
-      {(isLoginMinimized || isChatMinimized) && (
-        <div className="msn-minimized">
-          {isLoginMinimized && (
-            <button type="button" onClick={() => setIsLoginMinimized(false)}>
-              Windows Live Messenger
-            </button>
-          )}
-          {isChatMinimized && (
-            <button type="button" onClick={() => setIsChatMinimized(false)}>
-              {activeContact?.nick ?? "Conversa"}
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 }

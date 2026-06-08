@@ -70,20 +70,6 @@
   pointer-events: auto;
 }
 
-.msn-minimized {
-  bottom: 36px;
-  display: flex;
-  gap: 6px;
-  left: 10px;
-  pointer-events: auto;
-  position: absolute;
-}
-
-.msn-minimized button {
-  min-width: 150px;
-  text-align: left;
-}
-
 @media (max-width: 768px) {
   .chat-window {
     margin-inline: 10px;
