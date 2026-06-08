@@ -39,8 +39,10 @@ type MsnMessengerAppProps = {
 
 export function MsnMessengerApp({ onClose }: MsnMessengerAppProps) {
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
+  const [isChatMinimized, setIsChatMinimized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isMainMinimized, setIsMainMinimized] = useState(false);
   const [nick, setNick] = useState("");
   const [status, setStatus] = useState("online");
   const [messagesByContact, setMessagesByContact] = useState<Record<string, MessengerMessage[]>>({});
@@ -69,6 +71,7 @@ export function MsnMessengerApp({ onClose }: MsnMessengerAppProps) {
 
   function openChat(contact: MessengerContact) {
     setActiveContactId(contact.id);
+    setIsChatMinimized(false);
     setMessagesByContact((current) => {
       if (current[contact.id]) {
         return current;
@@ -108,41 +111,59 @@ export function MsnMessengerApp({ onClose }: MsnMessengerAppProps) {
 
   return (
     <div className="msn-clone">
-      <DraggableWindow initialX={24} initialY={24}>
-        <div className={`login-window p-2 position-relative ${isLoading ? "isLoading" : ""}`}>
-          <WindowToolbar onClose={onClose} />
+      {!isMainMinimized && (
+        <DraggableWindow initialX={24} initialY={24}>
+          <div className={`login-window p-2 position-relative ${isLoading ? "isLoading" : ""}`}>
+            <WindowToolbar onClose={onClose} onMinimize={() => setIsMainMinimized(true)} />
 
-          {isLoading && <MainWindowLoading onCancel={() => setIsLoading(false)} />}
+            {isLoading && <MainWindowLoading onCancel={() => setIsLoading(false)} />}
 
-          {!isLoggedIn && !isLoading && (
-            <MainWindowNotLogged
-              onLogin={login}
-              setStatus={setStatus}
-              status={status}
-            />
-          )}
+            {!isLoggedIn && !isLoading && (
+              <MainWindowNotLogged
+                onLogin={login}
+                setStatus={setStatus}
+                status={status}
+              />
+            )}
 
-          {isLoggedIn && !isLoading && (
-            <MainWindowLogged
-              activeContactId={activeContactId}
-              contacts={contacts}
-              nick={displayNick}
-              onOpenChat={openChat}
-            />
-          )}
-        </div>
-      </DraggableWindow>
+            {isLoggedIn && !isLoading && (
+              <MainWindowLogged
+                activeContactId={activeContactId}
+                contacts={contacts}
+                nick={displayNick}
+                onOpenChat={openChat}
+              />
+            )}
+          </div>
+        </DraggableWindow>
+      )}
 
-      {activeContact && (
+      {activeContact && !isChatMinimized && (
         <DraggableWindow initialX={368} initialY={24}>
           <ChatWindow
             contact={activeContact}
             messages={messagesByContact[activeContact.id] ?? []}
             nick={displayNick}
             onClose={() => setActiveContactId(null)}
+            onMinimize={() => setIsChatMinimized(true)}
             onSendMessage={(body) => sendMessage(activeContact, body)}
           />
         </DraggableWindow>
+      )}
+
+      {(isMainMinimized || (activeContact && isChatMinimized)) && (
+        <div className="msn-minimized-stack">
+          {isMainMinimized && (
+            <button type="button" onClick={() => setIsMainMinimized(false)}>
+              Windows Live Messenger
+            </button>
+          )}
+          {activeContact && isChatMinimized && (
+            <button type="button" onClick={() => setIsChatMinimized(false)}>
+              {activeContact.nick}
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
