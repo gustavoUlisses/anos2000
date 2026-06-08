@@ -15,6 +15,13 @@
             }
         ],
         [
+            "msn",
+            {
+                "top": 145,
+                "left": 5
+            }
+        ],
+        [
             "recycleBin",
             {
                 "bottom": 5,

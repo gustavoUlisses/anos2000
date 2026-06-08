@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "@/features/desktop/react-xp/index.css";
+import "@/features/messenger/msn-clone/msn-clone.css";
 
 export const metadata: Metadata = {
   title: "Anos 2000",

@@ -40,10 +40,12 @@
         "disabled": true
     },
     "msn": {
-        "title": "MSN",
-        "iconLarge": "/icon__msn--large.png",
-        "content": "placeholder",
-        "disabled": true
+        "title": "Windows Live Messenger",
+        "icon": "/images/msn.webp",
+        "iconLarge": "/images/msn.webp",
+        "component": "MsnMessenger",
+        "height": 610,
+        "width": 840
     },
     "recentDocuments": {
         "title": "My Recent Documents",
