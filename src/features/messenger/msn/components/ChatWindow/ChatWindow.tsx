@@ -13,10 +13,46 @@ type ChatWindowProps = {
   onMinimize: () => void;
 };
 
+const emojiValues = [
+  "🙂",
+  "😃",
+  "😮",
+  "😳",
+  "😎",
+  "😡",
+  "😔",
+  "😘",
+  "🙁",
+  "😲",
+  "😊",
+  "😁",
+  "🤓",
+  "😐",
+  "😢",
+  "😨",
+  "😕",
+  "😜",
+  "🙄",
+  "🤢",
+  "😴",
+  "👏",
+  "👍",
+  "🕺",
+  "🍸",
+  "🚶",
+  "💡",
+  "🎂",
+  "⭐",
+  "😬",
+  "🎉",
+  "❤️",
+];
+
 export function ChatWindow({ onClose, onMinimize }: ChatWindowProps) {
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const chatWindowRef = useRef<HTMLDivElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -28,7 +64,7 @@ export function ChatWindow({ onClose, onMinimize }: ChatWindowProps) {
   }
 
   const emojiList = Array.from({ length: 32 }, (_, index) => (
-    <li key={index} role="button">
+    <li key={index} role="button" onClick={() => insertEmoji(emojiValues[index])}>
       <img src={`/msn/images/emojis/${index + 1}.png`} alt="emoji" />
     </li>
   ));
@@ -71,6 +107,29 @@ export function ChatWindow({ onClose, onMinimize }: ChatWindowProps) {
       ]);
       setIsLoading(false);
     }, 700);
+  }
+
+  function insertEmoji(emoji: string) {
+    const textarea = textareaRef.current;
+
+    if (!textarea) {
+      setMessage((current) => `${current}${emoji}`);
+      setIsEmojiOpen(false);
+      return;
+    }
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const nextMessage = `${message.slice(0, start)}${emoji}${message.slice(end)}`;
+    const nextCursorPosition = start + emoji.length;
+
+    setMessage(nextMessage);
+    setIsEmojiOpen(false);
+
+    window.requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(nextCursorPosition, nextCursorPosition);
+    });
   }
 
   return (
@@ -142,6 +201,7 @@ export function ChatWindow({ onClose, onMinimize }: ChatWindowProps) {
                 </div>
                 <div className="px-2 d-flex chat-box">
                   <textarea
+                    ref={textareaRef}
                     value={message}
                     onChange={(event) => setMessage(event.target.value)}
                     onKeyDown={(event) => {
@@ -158,7 +218,7 @@ export function ChatWindow({ onClose, onMinimize }: ChatWindowProps) {
                   </div>
                 </div>
                 <div className="chat-box-toolbar">
-                  <p className="is-writing-label m-0">{isLoading ? "Gemini is writing..." : "â€Ž "}</p>
+                  <p className="is-writing-label m-0">{isLoading ? "Gemini is writing..." : "\u200e "}</p>
                 </div>
               </div>
             </div>
