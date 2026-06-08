@@ -24,6 +24,7 @@ export interface currentWindow {
 export type currentWindows = currentWindow[];
 
 export interface MessengerTaskbarItem {
+    attention?: boolean;
     icon: string;
     id: "msn-main" | "msn-chat";
     title: string;

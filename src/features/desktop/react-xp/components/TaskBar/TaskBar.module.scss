@@ -157,6 +157,13 @@
             }
         }
 
+        &[data-attention=true] {
+            animation: messengerAttention 1s steps(1, end) infinite;
+            background: #f7941d;
+            border-color: #9d4f00;
+            color: #111;
+        }
+
         &>span {
             mask-image: linear-gradient(to right,
                     black 0%,
@@ -171,5 +178,18 @@
                 text-align: left;
             }
         }
+    }
+}
+
+@keyframes messengerAttention {
+    0%,
+    100% {
+        background: #f7941d;
+        box-shadow: 0.1rem 0.1rem 0.1rem #0004, inset 0.1rem 0.1rem 0.1rem #fff8;
+    }
+
+    50% {
+        background: #ffd061;
+        box-shadow: 0.1rem 0.1rem 0.1rem #0004, inset 0.1rem 0.1rem 0.1rem #fff;
     }
 }

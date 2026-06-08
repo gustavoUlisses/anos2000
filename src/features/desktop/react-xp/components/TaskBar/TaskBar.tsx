@@ -90,7 +90,12 @@ const TaskBar = () => {
                     );
                 })}
                 {messengerTaskbarItems.map((item) => (
-                    <li key={item.id} onClick={() => messengerTaskbarClickHandler(item.id)} data-active={false}>
+                    <li
+                        key={item.id}
+                        onClick={() => messengerTaskbarClickHandler(item.id)}
+                        data-active={false}
+                        data-attention={item.attention}
+                    >
                         <span className="w-full relative flex">
                             <img src={item.icon} width="14" height="14" className="mr-2 min-w-5.5"></img>
                             <span className="absolute ml-7">{item.title}</span>
