@@ -1,5 +1,5 @@
 # Messenger feature
 
-Camada responsavel pelo MSN Messenger: sessao anonima por nick, contatos online, chats privados, status e eventos realtime.
+MSN Messenger migrado do projeto `belenyb/msn-react-clone`.
 
-O visual pode aproveitar componentes do `belenyb/msn-react-clone`, mas a regra de negocio fica aqui, isolada de UI e de Supabase.
+A UI roda isolada em Shadow DOM com Bootstrap/CSS do clone para preservar a aparencia original sem vazar estilos para o Windows XP. A integracao remove Gemini/API externa e mantem o chat local ate a camada realtime/admin ser conectada.

@@ -1,0 +1,41 @@
+.msn-app {
+  align-items: center;
+  display: flex;
+  font-family: "Roboto", Arial, sans-serif;
+  font-style: normal;
+  height: 100vh;
+  justify-content: space-around;
+  overflow: hidden;
+  pointer-events: none;
+  width: 100vw;
+}
+
+.msn-app * {
+  box-sizing: border-box;
+}
+
+.msn-app input {
+  outline: none;
+}
+
+.msn-window-slot {
+  pointer-events: auto;
+}
+
+.react-draggable {
+  pointer-events: auto;
+}
+
+.msn-minimized {
+  bottom: 36px;
+  display: flex;
+  gap: 6px;
+  left: 10px;
+  pointer-events: auto;
+  position: absolute;
+}
+
+.msn-minimized button {
+  min-width: 150px;
+  text-align: left;
+}

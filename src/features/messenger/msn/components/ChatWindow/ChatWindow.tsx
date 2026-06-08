@@ -1,0 +1,181 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import Draggable from "react-draggable";
+
+type ChatMessage = {
+  parts: Array<{ text: string }>;
+  role: "model" | "user";
+};
+
+type ChatWindowProps = {
+  onClose: () => void;
+  onMinimize: () => void;
+};
+
+export function ChatWindow({ onClose, onMinimize }: ChatWindowProps) {
+  const nodeRef = useRef<HTMLDivElement | null>(null);
+  const chatWindowRef = useRef<HTMLDivElement | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [isEmojiOpen, setIsEmojiOpen] = useState(false);
+
+  function setChatWindowNode(node: HTMLDivElement | null) {
+    nodeRef.current = node;
+    chatWindowRef.current = node;
+  }
+
+  const emojiList = Array.from({ length: 32 }, (_, index) => (
+    <li key={index} role="button">
+      <img src={`/msn/images/emojis/${index + 1}.png`} alt="emoji" />
+    </li>
+  ));
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatHistory]);
+
+  function playTiltSound() {
+    const audio = new Audio("/msn/sounds/tilt.mp3");
+    const chatWindow = chatWindowRef.current;
+
+    if (chatWindow) {
+      chatWindow.classList.remove("shake");
+      void chatWindow.offsetWidth;
+      chatWindow.classList.add("shake");
+    }
+
+    void audio.play().catch(() => undefined);
+  }
+
+  function sendMessage() {
+    const trimmedMessage = message.trim();
+
+    if (!trimmedMessage || isLoading) {
+      return;
+    }
+
+    setIsLoading(true);
+    setMessage("");
+    setChatHistory((current) => [
+      ...current,
+      { role: "user", parts: [{ text: trimmedMessage }] },
+    ]);
+
+    window.setTimeout(() => {
+      setChatHistory((current) => [
+        ...current,
+        { role: "model", parts: [{ text: "Mensagem recebida. Em breve este chat sera conectado ao Anos 2000 em tempo real." }] },
+      ]);
+      setIsLoading(false);
+    }, 700);
+  }
+
+  return (
+    <Draggable handle=".handle" nodeRef={nodeRef}>
+      <div ref={setChatWindowNode} className="chat-window position-relative" id="chatWindow">
+          <div className="d-flex justify-content-between align-items-center handle px-2">
+            <div className="d-flex align-items-center">
+              <img src="/msn/images/user/user-online.png" alt="Online user icon" width="35" className="p-1" />
+              <div className="d-grid">
+                <span className="ps-1 fw-bold lh-1">Gemini</span>
+                <span className="ps-1 lh-1">Ask me anything</span>
+              </div>
+            </div>
+            <div className="d-flex gap-2">
+              <svg role="button" onClick={onMinimize} xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="#787878" className="bi bi-dash-lg" viewBox="0 0 16 16">
+                <path fillRule="evenodd" d="M2 8a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11A.5.5 0 0 1 2 8" />
+              </svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="#787878" className="bi bi-window-fullscreen" viewBox="0 0 16 16">
+                <path d="M3 3.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m1.5 0a.5.5 0 1 1-1 0m1 .5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1" />
+                <path d="M.5 1a.5.5 0 0 0-.5.5v13a.5.5 0 0 0 .5.5h15a.5.5 0 0 0 .5-.5v-13a.5.5 0 0 0-.5-.5zM1 5V2h14v3zm0 1h14v8H1z" />
+              </svg>
+              <svg role="button" onClick={onClose} xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="#787878" className="close-btn bi bi-x-lg" viewBox="0 0 16 16">
+                <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z" />
+              </svg>
+            </div>
+          </div>
+          <div className="d-flex gap-3 p-2 border-1 border-top">
+            <img role="button" src="/msn/images/user/user-invite.png" alt="Icon" width="20" />
+            <img role="button" src="/msn/images/msn-icons/folder.png" alt="Icon" width="20" />
+            <img role="button" src="/msn/images/msn-icons/music.png" alt="Icon" width="20" />
+            <img role="button" src="/msn/images/msn-icons/phone.png" alt="Icon" width="20" />
+            <img role="button" src="/msn/images/msn-icons/games.png" alt="Icon" width="20" />
+            <img role="button" src="/msn/images/user/user-blocked.png" alt="Icon" width="20" />
+          </div>
+          <div className="row g-0 mx-2 messages-block-row">
+            <div className="col col-md-9">
+              <div className="me-2 messages-block white-box d-flex flex-column pt-1 overflow-auto">
+                {chatHistory.map((chat, index) => (
+                  <div key={`${chat.role}-${index}`} className="mb-2 px-2">
+                    <p className="m-0 fw-bold message-user">{chat.role === "model" ? "Gemini says: " : "belenyb says: "}</p>
+                    <div className={`m-0 message ${chat.role}`}>
+                      <p className="mb-0">{chat.parts[0].text}</p>
+                    </div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+              <div className="d-flex justify-content-center mb-0 mb-lg-2 separator">
+                <span className="fw-bolder">. . . . . . . . </span>
+              </div>
+              <div className="white-box me-2">
+                <div className="d-flex gap-2 chat-box-toolbar">
+                  <div className="px-2 my-1 border-end">
+                    <div className="btn-group dropup">
+                      <button type="button" className="dropdown-toggle" onClick={() => setIsEmojiOpen((current) => !current)}>
+                        <img src="/msn/images/msn-icons/emoticon.png" alt="Emoji" />
+                      </button>
+                      <ul className={`dropdown-menu emojis-grid ${isEmojiOpen ? "show" : ""}`}>
+                        {emojiList}
+                      </ul>
+                    </div>
+                    <img className="ps-2" src="/msn/images/tilt.png" alt="Tilt icon" role="button" onClick={playTiltSound} />
+                  </div>
+                  <div className="d-flex align-items-center gap-2">
+                    <img src="/msn/images/bg.png" alt="icons" role="button" width="18" />
+                    <img src="/msn/images/msn-icons/text.png" alt="icons" role="button" width="18" />
+                    <img src="/msn/images/msn-icons/voice.png" alt="icons" role="button" width="18" />
+                  </div>
+                </div>
+                <div className="px-2 d-flex chat-box">
+                  <textarea
+                    value={message}
+                    onChange={(event) => setMessage(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        sendMessage();
+                      }
+                    }}
+                    className="w-100 my-1"
+                  />
+                  <div className="d-grid gap-1 ps-1 py-1 chat-buttons">
+                    <button onClick={sendMessage} type="button" className="send-button" />
+                    <button type="button" className="search-button">Search</button>
+                  </div>
+                </div>
+                <div className="chat-box-toolbar">
+                  <p className="is-writing-label m-0">{isLoading ? "Gemini is writing..." : "â€Ž "}</p>
+                </div>
+              </div>
+            </div>
+            <div className="col-auto d-flex flex-column justify-content-between">
+              <div className="p-lg-2 p-1 bg-white">
+                <img src="/msn/images/gemini.png" alt="User profile" width="100" className="user-profile-pic border border-2 border-white" />
+              </div>
+              <div className="p-lg-2 p-1 bg-white">
+                <img src="/msn/images/user.png" alt="User profile" width="100" className="user-profile-pic border border-2 border-white" />
+              </div>
+            </div>
+          </div>
+          <div className="position-absolute bottom-0">
+            <img src="/msn/favicon.ico" alt="Windows Live Messenger icon" width="25" className="p-1" />
+            <span className="ps-1">Windows Live Messenger</span>
+          </div>
+      </div>
+    </Draggable>
+  );
+}

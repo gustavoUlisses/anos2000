@@ -41,8 +41,8 @@
     },
     "msn": {
         "title": "Windows Live Messenger",
-        "icon": "/images/msn.webp",
-        "iconLarge": "/images/msn.webp",
+        "icon": "/msn/images/msn.webp",
+        "iconLarge": "/msn/images/msn.webp",
         "content": "placeholder"
     },
     "recentDocuments": {

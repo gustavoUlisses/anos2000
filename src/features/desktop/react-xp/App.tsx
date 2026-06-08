@@ -5,7 +5,7 @@ import TaskBar from "./components/TaskBar/TaskBar";
 import Wallpaper from "./components/Wallpaper/Wallpaper";
 import WindowManagement from "./components/WindowManagement/WindowManagement";
 import { useContext } from "./context/context";
-import { MsnMessengerApp } from "@/features/messenger/msn-clone/MsnMessengerApp";
+import { MsnMessengerApp } from "@/features/messenger/msn/MsnMessengerApp";
 
 function App() {
     const {windowsInitiationState, isInitialBoot, initiationStage, isMessengerOpen, dispatch} = useContext();
