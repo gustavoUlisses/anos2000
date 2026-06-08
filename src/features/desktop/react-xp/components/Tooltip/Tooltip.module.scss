@@ -1,0 +1,87 @@
+.tooltip {
+    background: #ffffe4;
+    color: #000;
+    border: 0.1rem solid currentColor;
+    border-radius: 0.8rem;
+    bottom: 2.6rem;
+    right: -1rem;
+    width: 25rem;
+    padding: 0.5rem 0.75rem;
+    max-width: 70vw;
+    line-height: 1rem;
+    font-size: 0.8rem;
+    opacity: 1;
+    transition: 0.3s opacity ease-in-out;
+    animation: tooltip-fade-in 1.5s linear;
+
+
+    &:before {
+        content: "";
+        position: absolute;
+        border-right: 2rem solid #000;
+        border-bottom: 2rem solid transparent;
+        right: 2rem;
+        bottom: -2rem;
+    }
+
+    &:after {
+        content: "";
+        position: absolute;
+        border-right: 1.8rem solid #ffffe4;
+        border-bottom: 1.8rem solid transparent;
+        right: 2.08rem;
+        bottom: -1.78rem;
+    }
+
+    h4 {
+        font-weight: 600;
+    }
+
+    &[data-dismissed="true"] {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .tooltipClose {
+        background: #fffff6;
+        color: #a89d89;
+        border: 0.1rem solid #cdc6b0;
+        position: absolute;
+        top: 0.4rem;
+        right: 0.4rem;
+        border-radius: 0.2rem;
+        padding: 0;
+        transition: all 0.2 ease-in;
+
+        &:hover {
+            color: #fff;
+            box-shadow: inset 0 0 0 0.1rem #ed960754, inset 0.2rem 0.2rem 0.5rem #fcf1e0, inset -0.2rem -0.2rem 0.1rem #f4a423, 0.1rem 0.1rem 0.1rem #0003;
+            background-color: #f5c06a;
+            background: url("/spritesheet__window_ui.png"), radial-gradient(circle at 85% 85%, #ffbe55 50%, #ff9e00 70%, #ff9e00 100%);
+            border: 0.1rem solid #fff;
+        }
+
+        &>span {
+            transform: rotate(45deg);
+            display: block;
+            width: 1.3rem;
+            height: 1.3rem;
+            font-size: 2rem;
+            line-height: 1.2rem;
+        }
+    }
+
+    .social {
+        zoom: 0.7;
+    }
+}
+
+@keyframes tooltip-fade-in {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}

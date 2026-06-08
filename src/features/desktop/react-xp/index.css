@@ -1,0 +1,72 @@
+@layer base {
+  button {
+    cursor: pointer;
+  }
+}
+
+:root {
+  font-family: Tahoma, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-size: 10px;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  overflow: hidden;
+}
+
+button {
+  text-align: left;
+
+
+  &[disabled] {
+    cursor: not-allowed;
+  }
+}
+
+.crt-effect {
+  filter: blur(0.02rem);
+}
+
+@media (max-width: 767px) and (pointer: coarse) {
+  .crt-effect {
+    filter: none;
+  }
+}
+
+.crt-effect::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(0deg, #111 0, #111 1px, transparent 2px, transparent 5px);
+  background-size: 100% 2px;
+  animation: lines 3s ease-out infinite;
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: 11;
+}
+
+.crt-effect::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(50% 50%, #fbf8e1 1%, #f4ebdfab 40%, #32313154 100%), radial-gradient(50% 50%, #fbf8e1ee 1%, #fbf8e100 60%), url("/assets/bg.png");
+  background-blend-mode: soft-light, hard-light;
+  background-size: cover;
+  background-position: center;
+}

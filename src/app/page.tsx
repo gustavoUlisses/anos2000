@@ -1,5 +1,5 @@
-import { WindowsXpExperience } from "@/features/desktop/WindowsXpExperience";
+import { NoSsrReactXpExperience } from "@/features/desktop/NoSsrReactXpExperience";
 
 export default function Home() {
-  return <WindowsXpExperience />;
+  return <NoSsrReactXpExperience />;
 }

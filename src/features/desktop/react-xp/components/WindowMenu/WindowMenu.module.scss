@@ -1,0 +1,34 @@
+.windowMenu {
+    background: #f1f0eb;
+    border-bottom: 0.1rem solid #dedaca;
+    color: #000;
+    min-height: 2.3rem;
+
+    @include theme-color("silver") {
+        background-color: #f1f0f3;
+        border-bottom: 0.1rem solid #c1c6d6;
+    }
+
+    img {
+        border-left: 0.1rem solid #dedaca;
+        object-fit: cover;
+    }
+
+    ul {
+        position: absolute;
+        left: -0.15rem;
+        top: -0.15rem;
+
+        li {
+            &:hover {
+                color: #fff;
+                background-color: #4069bf;
+                cursor: not-allowed;
+            }
+
+            button {
+                cursor: not-allowed;
+            }
+        }
+    }
+}

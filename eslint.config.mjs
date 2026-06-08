@@ -20,6 +20,17 @@ const eslintConfig = defineConfig([
       "@next/next/no-img-element": "off",
     },
   },
+  {
+    files: ["src/features/desktop/react-xp/**"],
+    rules: {
+      "jsx-a11y/alt-text": "off",
+      "react-hooks/refs": "off",
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/static-components": "off",
+      "react-hooks/immutability": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

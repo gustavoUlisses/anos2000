@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  sassOptions: {
+    additionalData:
+      '@mixin theme-color($mode) { :global(body[data-theme="#{$mode}"]) & { @content; } }',
+  },
 };
 
 export default nextConfig;
