@@ -135,6 +135,11 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
     setOnlineNotifications((current) => current.filter((notification) => notification.id !== notificationId));
   }
 
+  function openChatFromNotification(notification: OnlineNotification) {
+    dismissOnlineNotification(notification.id);
+    void openChat(notification.contact);
+  }
+
   const contactFromIncomingMessage = useCallback((message: MsnMessage): MsnContact => {
     const existingContact = contacts.find((contact) => contact.id === message.senderId);
 
@@ -470,7 +475,19 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
       {onlineNotifications.length ? (
         <div className="msn-online-notifications" aria-live="polite">
           {onlineNotifications.map((notification) => (
-            <div className="msn-online-toast" key={notification.id}>
+            <div
+              className="msn-online-toast"
+              key={notification.id}
+              onClick={() => openChatFromNotification(notification)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  openChatFromNotification(notification);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+            >
               <div className="msn-online-toast-header">
                 <div className="msn-online-toast-title">
                   <img src="/msn/images/msn.webp" alt="" />
@@ -479,10 +496,13 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
                 <button
                   aria-label="Fechar"
                   className="msn-online-toast-close"
-                  onClick={() => dismissOnlineNotification(notification.id)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    dismissOnlineNotification(notification.id);
+                  }}
                   type="button"
                 >
-                  ×
+                  X
                 </button>
               </div>
               <div className="msn-online-toast-body">
@@ -494,7 +514,13 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
                   <span>acabou de entrar.</span>
                 </div>
               </div>
-              <button className="msn-online-toast-options" type="button">Opções</button>
+              <button
+                className="msn-online-toast-options"
+                onClick={(event) => event.stopPropagation()}
+                type="button"
+              >
+                Opcoes
+              </button>
             </div>
           ))}
         </div>
