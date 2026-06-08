@@ -30,8 +30,17 @@ export function MainWindowLogged({
   const onlineContacts = contacts.filter((contact) => contact.status === "online" || contact.status === "away");
   const offlineContacts = contacts.filter((contact) => contact.status === "offline");
 
+  function renderContactLabel(contact: MsnContact) {
+    return (
+      <span>
+        {contact.nick}
+        {contact.message ? <span className="text-secondary"> - {contact.message}</span> : null}
+      </span>
+    );
+  }
+
   function savePersonalMessage() {
-    const nextMessage = draftMessage.trim() || "<Enter a personal message>";
+    const nextMessage = draftMessage.trim();
     setDraftMessage(nextMessage);
     setIsEditingMessage(false);
     onPersonalMessageChange(nextMessage);
@@ -114,7 +123,7 @@ export function MainWindowLogged({
                   role="button"
                 >
                   <img src={statusIcon[contact.status]} alt="User icon" width={16} />
-                  <span>{contact.nick}<span className="text-secondary"> - {contact.message}</span></span>
+                  {renderContactLabel(contact)}
                 </div>
               ))}
             </details>
@@ -130,7 +139,7 @@ export function MainWindowLogged({
                   role="button"
                 >
                   <img src={statusIcon[contact.status]} alt="User icon" width={16} />
-                  <span>{contact.nick}<span className="text-secondary"> - {contact.message}</span></span>
+                  {renderContactLabel(contact)}
                 </div>
               ))}
             </details>

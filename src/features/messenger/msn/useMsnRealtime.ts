@@ -8,7 +8,6 @@ import type { MsnChatPart, MsnContact, MsnMessage, MsnProfile } from "./types";
 const clientIdStorageKey = "anos2000:msn:client-id";
 const profileStorageKey = "anos2000:msn:profile";
 const gusDevId = "gusdev-offline";
-const defaultPersonalMessage = "<Enter a personal message>";
 
 type PresencePayload = MsnProfile;
 
@@ -49,7 +48,7 @@ function normalizeNick(rawNick: string) {
 
 function normalizePersonalMessage(rawMessage: string | undefined) {
   const cleanedMessage = rawMessage?.trim().replace(/\s+/g, " ").slice(0, 80);
-  return cleanedMessage || defaultPersonalMessage;
+  return cleanedMessage || "";
 }
 
 function ensureProfileDefaults(profile: MsnProfile): MsnProfile {
@@ -149,7 +148,7 @@ async function createSessionProfile(clientId: string, nick: string, password?: s
     isAdmin: false,
     lastSeenAt: new Date().toISOString(),
     nick,
-    personalMessage: defaultPersonalMessage,
+    personalMessage: "",
   };
 
   try {
@@ -158,7 +157,7 @@ async function createSessionProfile(clientId: string, nick: string, password?: s
         clientId,
         nick,
         password,
-        personalMessage: isGusDev ? "Criador do projeto" : defaultPersonalMessage,
+        personalMessage: isGusDev ? "Criador do projeto" : "",
       }),
       headers: { "Content-Type": "application/json" },
       method: "POST",
@@ -402,7 +401,7 @@ export function useMsnRealtime() {
         avatar: "/msn/images/user.png",
         id: onlineProfile.id,
         isAdmin: onlineProfile.isAdmin,
-        message: onlineProfile.personalMessage || (onlineProfile.isAdmin ? "Criador do projeto" : defaultPersonalMessage),
+        message: onlineProfile.personalMessage || (onlineProfile.isAdmin ? "Criador do projeto" : ""),
         nick: onlineProfile.nick,
         status: "online",
       }));

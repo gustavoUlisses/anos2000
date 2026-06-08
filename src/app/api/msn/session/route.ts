@@ -15,11 +15,9 @@ const profileMessageSchema = z.object({
   personalMessage: z.string(),
 });
 
-const defaultPersonalMessage = "<Enter a personal message>";
-
 function normalizePersonalMessage(message: string | undefined) {
   const cleanedMessage = message?.trim().replace(/\s+/g, " ").slice(0, 80);
-  return cleanedMessage || defaultPersonalMessage;
+  return cleanedMessage || "";
 }
 
 export async function POST(request: Request) {

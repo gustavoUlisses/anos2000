@@ -55,7 +55,7 @@ export function MsnApp({ onClose }: MsnAppProps) {
     return existingContact ?? {
       avatar: "/msn/images/user.png",
       id: message.senderId,
-      message: "<Enter a personal message>",
+      message: "",
       nick: message.senderNick,
       status: "online",
     };
