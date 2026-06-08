@@ -73,9 +73,23 @@
   border-radius: 4px;
 }
 
-textarea {
+.message-editor {
   all: unset;
+  color: #111;
+  display: block;
   font-size: 12px;
+  min-height: 42px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.composer-emoji,
+.message-emoji {
+  display: inline-block;
+  height: 20px;
+  margin: 0 1px;
+  vertical-align: text-bottom;
+  width: 20px;
 }
 
 .message {
