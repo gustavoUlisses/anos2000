@@ -29,6 +29,7 @@ export type MsnContact = {
 export type MsnMessage = {
   createdAt: string;
   id: string;
+  kind?: "system";
   parts: MsnChatPart[];
   recipientId: string | null;
   senderId: string;

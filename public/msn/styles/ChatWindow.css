@@ -84,6 +84,18 @@
   word-break: break-word;
 }
 
+.message-editor[data-disabled="true"] {
+  color: #777;
+  cursor: not-allowed;
+}
+
+.system-message {
+  color: #777;
+  font-size: 12px;
+  font-style: italic;
+  text-align: center;
+}
+
 .composer-emoji,
 .message-emoji {
   display: inline-block;

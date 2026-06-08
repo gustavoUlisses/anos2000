@@ -7,6 +7,7 @@ import type { MsnChatPart, MsnContact, MsnMessage, MsnProfile } from "../../type
 type ChatWindowProps = {
   contact: MsnContact;
   currentProfile: MsnProfile;
+  isContactOnline: boolean;
   messages: MsnMessage[];
   onClose: () => void;
   onMinimize: () => void;
@@ -16,6 +17,7 @@ type ChatWindowProps = {
 export function ChatWindow({
   contact,
   currentProfile,
+  isContactOnline,
   messages,
   onClose,
   onMinimize,
@@ -26,6 +28,9 @@ export function ChatWindow({
   const editorRef = useRef<HTMLDivElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
+  const contactStatusIcon = contact.status === "offline"
+    ? "/msn/images/user/user-invisible.png"
+    : "/msn/images/user/user-online.png";
 
   function setChatWindowNode(node: HTMLDivElement | null) {
     nodeRef.current = node;
@@ -119,6 +124,10 @@ export function ChatWindow({
   }
 
   function sendMessage() {
+    if (!isContactOnline) {
+      return;
+    }
+
     const parts = readEditorParts();
     const hasContent = parts.some((part) => part.type === "emoji" || part.text.trim());
 
@@ -131,6 +140,10 @@ export function ChatWindow({
   }
 
   function insertEmoji(emojiNumber: number) {
+    if (!isContactOnline) {
+      return;
+    }
+
     const editor = editorRef.current;
 
     if (!editor) {
@@ -170,7 +183,7 @@ export function ChatWindow({
       <div ref={setChatWindowNode} className="chat-window position-relative" id="chatWindow">
         <div className="d-flex justify-content-between align-items-center handle px-2">
           <div className="d-flex align-items-center">
-            <img src="/msn/images/user/user-online.png" alt="Online user icon" width="35" className="p-1" />
+            <img src={contactStatusIcon} alt="User status icon" width="35" className="p-1" />
             <div className="d-grid">
               <span className="ps-1 fw-bold lh-1">{contact.nick}</span>
               <span className="ps-1 lh-1">{contact.message}</span>
@@ -201,6 +214,14 @@ export function ChatWindow({
           <div className="col col-md-9">
             <div className="me-2 messages-block white-box d-flex flex-column pt-1 overflow-auto">
               {messages.map((chat) => {
+                if (chat.kind === "system") {
+                  return (
+                    <div key={chat.id} className="system-message px-2 py-1">
+                      {renderMessageParts(chat.parts)}
+                    </div>
+                  );
+                }
+
                 const isMine = chat.senderId === currentProfile.id;
 
                 return (
@@ -240,7 +261,8 @@ export function ChatWindow({
                 <div
                   aria-label="Message"
                   className="w-100 my-1 message-editor"
-                  contentEditable
+                  contentEditable={isContactOnline}
+                  data-disabled={!isContactOnline}
                   onKeyDown={(event) => {
                     if (event.key === "Enter") {
                       event.preventDefault();
@@ -252,12 +274,12 @@ export function ChatWindow({
                   suppressContentEditableWarning
                 />
                 <div className="d-grid gap-1 ps-1 py-1 chat-buttons">
-                  <button onClick={sendMessage} type="button" className="send-button" />
+                  <button disabled={!isContactOnline} onClick={sendMessage} type="button" className="send-button" />
                   <button type="button" className="search-button">Search</button>
                 </div>
               </div>
               <div className="chat-box-toolbar">
-                <p className="is-writing-label m-0">{"\u200e "}</p>
+                <p className="is-writing-label m-0">{isContactOnline ? "\u200e " : "O usuario esta offline."}</p>
               </div>
             </div>
           </div>

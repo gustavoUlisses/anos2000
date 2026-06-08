@@ -389,6 +389,24 @@ export function useMsnRealtime() {
     await persistMessage(message);
   }, [profile]);
 
+  const addSystemMessage = useCallback((contact: MsnContact, text: string) => {
+    if (!profile) {
+      return;
+    }
+
+    const message: MsnMessage = {
+      createdAt: new Date().toISOString(),
+      id: `system-${contact.id}-${createId()}`,
+      kind: "system",
+      parts: [{ text, type: "text" }],
+      recipientId: profile.id,
+      senderId: contact.id,
+      senderNick: "Windows Live Messenger",
+    };
+
+    setMessages((current) => dedupeMessages([...current, message]));
+  }, [profile]);
+
   const contacts = useMemo(() => {
     if (!profile) {
       return [];
@@ -434,7 +452,12 @@ export function useMsnRealtime() {
     ));
   }, [messages, profile]);
 
+  const onlineProfileIds = useMemo(() => (
+    onlineProfiles.map((onlineProfile) => onlineProfile.id)
+  ), [onlineProfiles]);
+
   return {
+    addSystemMessage,
     contacts,
     getConversation,
     isRealtimeConfigured: Boolean(supabase),
@@ -442,6 +465,7 @@ export function useMsnRealtime() {
     login,
     logout,
     messages,
+    onlineProfileIds,
     profile,
     sendMessage,
     updatePersonalMessage,

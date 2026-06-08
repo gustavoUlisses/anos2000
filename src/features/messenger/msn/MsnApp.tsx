@@ -27,7 +27,14 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
   const [showLoginWindow, setShowLoginWindow] = useState(true);
   const [isLoginMinimized, setIsLoginMinimized] = useState(false);
   const handledIncomingMessageIds = useRef<Set<string>>(new Set());
+  const offlineNotifiedContactIds = useRef<Set<string>>(new Set());
   const mountedAt = useRef(0);
+  const addSystemMessage = messenger.addSystemMessage;
+  const contacts = messenger.contacts;
+  const isRealtimeConfigured = messenger.isRealtimeConfigured;
+  const onlineProfileIds = messenger.onlineProfileIds;
+  const onlineProfileKey = onlineProfileIds.join("|");
+  const profile = messenger.profile;
 
   useEffect(() => {
     mountedAt.current = Date.now();
@@ -87,6 +94,7 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
     setIsLoginMinimized(false);
     setShowLoginWindow(true);
     handledIncomingMessageIds.current.clear();
+    offlineNotifiedContactIds.current.clear();
     messenger.logout();
   }
 
@@ -96,7 +104,7 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
   }
 
   const contactFromIncomingMessage = useCallback((message: MsnMessage): MsnContact => {
-    const existingContact = messenger.contacts.find((contact) => contact.id === message.senderId);
+    const existingContact = contacts.find((contact) => contact.id === message.senderId);
 
     return existingContact ?? {
       avatar: "/msn/images/user.png",
@@ -105,17 +113,17 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
       nick: message.senderNick,
       status: "online",
     };
-  }, [messenger.contacts]);
+  }, [contacts]);
 
   useEffect(() => {
-    if (!messenger.profile) {
+    if (!profile) {
       handledIncomingMessageIds.current.clear();
       return;
     }
 
     const incomingMessages = messenger.messages.filter((message) => (
-      message.senderId !== messenger.profile?.id &&
-      message.recipientId === messenger.profile?.id &&
+      message.senderId !== profile.id &&
+      message.recipientId === profile.id &&
       new Date(message.createdAt).getTime() >= mountedAt.current &&
       !handledIncomingMessageIds.current.has(message.id)
     ));
@@ -155,7 +163,36 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
 
       return nextChats;
     });
-  }, [contactFromIncomingMessage, messenger.messages, messenger.profile]);
+  }, [contactFromIncomingMessage, messenger.messages, profile]);
+
+  useEffect(() => {
+    if (!profile || !isRealtimeConfigured) {
+      return;
+    }
+
+    const onlineIds = new Set(onlineProfileIds);
+
+    for (const chat of openChats) {
+      const isOnline = onlineIds.has(chat.contact.id);
+
+      if (isOnline) {
+        offlineNotifiedContactIds.current.delete(chat.contact.id);
+        continue;
+      }
+
+      if (chat.contact.status !== "offline" && !offlineNotifiedContactIds.current.has(chat.contact.id)) {
+        offlineNotifiedContactIds.current.add(chat.contact.id);
+        addSystemMessage(chat.contact, "O usuario saiu...");
+      }
+    }
+  }, [
+    addSystemMessage,
+    isRealtimeConfigured,
+    onlineProfileKey,
+    openChats,
+    onlineProfileIds,
+    profile,
+  ]);
 
   useEffect(() => {
     const items: MessengerTaskbarItem[] = [];
@@ -205,7 +242,32 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
     };
   }, [onTaskbarItemsChange]);
 
-  const currentProfile = messenger.profile;
+  function isContactOnline(contactId: string) {
+    return !isRealtimeConfigured || onlineProfileIds.includes(contactId);
+  }
+
+  function resolveChatContact(contact: MsnContact): MsnContact {
+    if (!isRealtimeConfigured) {
+      return contact;
+    }
+
+    const onlineContact = contacts.find((candidate) => candidate.id === contact.id);
+
+    if (onlineProfileIds.includes(contact.id)) {
+      return onlineContact ?? {
+        ...contact,
+        status: "online",
+      };
+    }
+
+    return {
+      ...contact,
+      message: "",
+      status: "offline",
+    };
+  }
+
+  const currentProfile = profile;
 
   return (
     <div className="msn-app">
@@ -228,18 +290,30 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
       )}
 
       {currentProfile && openChats.some((chat) => !chat.minimized) ? (
-        openChats.filter((chat) => !chat.minimized).map((chat) => (
-          <div className="msn-window-slot" key={chat.contact.id}>
-            <ChatWindow
-              contact={chat.contact}
-              currentProfile={currentProfile}
-              messages={messenger.getConversation(chat.contact.id)}
-              onClose={() => closeChatWindow(chat.contact.id)}
-              onMinimize={() => minimizeChat(chat.contact.id)}
-              onSendMessage={(parts) => messenger.sendMessage(chat.contact, parts)}
-            />
-          </div>
-        ))
+        openChats.filter((chat) => !chat.minimized).map((chat) => {
+          const resolvedContact = resolveChatContact(chat.contact);
+          const contactOnline = isContactOnline(chat.contact.id);
+
+          return (
+            <div className="msn-window-slot" key={chat.contact.id}>
+              <ChatWindow
+                contact={resolvedContact}
+                currentProfile={currentProfile}
+                isContactOnline={contactOnline}
+                messages={messenger.getConversation(chat.contact.id)}
+                onClose={() => closeChatWindow(chat.contact.id)}
+                onMinimize={() => minimizeChat(chat.contact.id)}
+                onSendMessage={(parts) => {
+                  if (!contactOnline) {
+                    return;
+                  }
+
+                  messenger.sendMessage(resolvedContact, parts);
+                }}
+              />
+            </div>
+          );
+        })
       ) : (
         <div style={{ width: "500px", height: "550px" }} />
       )}
