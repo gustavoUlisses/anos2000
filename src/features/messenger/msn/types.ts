@@ -43,3 +43,9 @@ export type MsnNudgeEvent = {
   sender: MsnContact;
   senderId: string;
 };
+
+export type MsnOnlineEvent = {
+  contact: MsnContact;
+  createdAt: string;
+  id: string;
+};

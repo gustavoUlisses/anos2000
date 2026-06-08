@@ -71,13 +71,13 @@
 }
 
 .msn-online-notifications {
-  bottom: 44px;
+  bottom: 42px;
   display: flex;
   flex-direction: column-reverse;
-  gap: 10px;
+  gap: 7px;
   pointer-events: none;
   position: fixed;
-  right: 10px;
+  right: 8px;
   z-index: 10000;
 }
 
@@ -88,18 +88,18 @@
   border: 1px solid rgba(82, 198, 236, 0.95);
   border-radius: 13px;
   box-shadow:
-    inset 0 0 0 5px rgba(255, 255, 255, 0.82),
-    inset 0 -4px 0 rgba(91, 210, 238, 0.85),
-    0 13px 25px rgba(0, 0, 0, 0.32);
+    inset 0 0 0 4px rgba(255, 255, 255, 0.82),
+    inset 0 -3px 0 rgba(91, 210, 238, 0.85),
+    0 8px 18px rgba(0, 0, 0, 0.3);
   color: #363636;
   cursor: pointer;
   font-family: "Roboto", Arial, sans-serif;
-  height: 220px;
+  height: 142px;
   overflow: hidden;
-  padding: 18px 22px 18px;
+  padding: 11px 14px 10px;
   pointer-events: auto;
   position: relative;
-  width: 470px;
+  width: 326px;
 }
 
 .msn-online-toast::before {
@@ -122,16 +122,16 @@
 .msn-online-toast-title {
   align-items: center;
   display: flex;
-  font-size: 27px;
-  gap: 12px;
-  line-height: 34px;
+  font-size: 21px;
+  gap: 8px;
+  line-height: 26px;
   min-width: 0;
 }
 
 .msn-online-toast-title img {
   flex: 0 0 auto;
-  height: 38px;
-  width: 38px;
+  height: 25px;
+  width: 25px;
 }
 
 .msn-online-toast-title span {
@@ -146,17 +146,17 @@
   box-shadow: none !important;
   color: #696969 !important;
   font-family: Arial, sans-serif;
-  font-size: 30px !important;
+  font-size: 25px !important;
   font-weight: normal;
-  line-height: 32px;
-  padding: 0 5px !important;
+  line-height: 26px;
+  padding: 0 3px !important;
 }
 
 .msn-online-toast-body {
   align-items: center;
   display: flex;
-  gap: 24px;
-  margin-top: 22px;
+  gap: 13px;
+  margin-top: 10px;
   position: relative;
   z-index: 1;
 }
@@ -168,12 +168,12 @@
   border: 4px solid rgba(156, 171, 184, 0.86);
   border-radius: 22px;
   box-shadow:
-    inset 0 0 0 5px rgba(255, 255, 255, 0.7),
-    0 7px 13px rgba(0, 0, 0, 0.24);
+    inset 0 0 0 4px rgba(255, 255, 255, 0.7),
+    0 5px 10px rgba(0, 0, 0, 0.24);
   flex: 0 0 auto;
-  height: 118px;
-  padding: 12px;
-  width: 118px;
+  height: 76px;
+  padding: 8px;
+  width: 76px;
 }
 
 .msn-online-toast-avatar img {
@@ -187,10 +187,10 @@
 .msn-online-toast-copy {
   display: grid;
   flex: 1 1 auto;
-  font-size: 36px;
-  line-height: 1.16;
+  font-size: 25px;
+  line-height: 1.05;
   min-width: 0;
-  padding-bottom: 30px;
+  padding-bottom: 21px;
 }
 
 .msn-online-toast-copy strong,
@@ -203,14 +203,14 @@
 .msn-online-toast-options {
   background: transparent !important;
   border: 0 !important;
-  bottom: 18px;
+  bottom: 9px;
   box-shadow: none !important;
   color: #0069d9 !important;
-  font-size: 34px !important;
-  line-height: 38px;
+  font-size: 25px !important;
+  line-height: 29px;
   padding: 0 !important;
   position: absolute;
-  right: 34px;
+  right: 19px;
   z-index: 1;
 }
 
@@ -278,19 +278,19 @@
   }
 
   .msn-online-toast {
-    height: 160px;
-    padding: 12px 14px 10px;
+    height: 136px;
+    padding: 10px 12px 9px;
     width: 100%;
   }
 
   .msn-online-toast-title {
     font-size: 18px;
-    line-height: 24px;
+    line-height: 23px;
   }
 
   .msn-online-toast-title img {
-    height: 30px;
-    width: 30px;
+    height: 24px;
+    width: 24px;
   }
 
   .msn-online-toast-close {
@@ -298,25 +298,25 @@
   }
 
   .msn-online-toast-body {
-    gap: 14px;
-    margin-top: 16px;
+    gap: 12px;
+    margin-top: 10px;
   }
 
   .msn-online-toast-avatar {
     border-radius: 18px;
-    height: 76px;
-    padding: 8px;
-    width: 76px;
+    height: 68px;
+    padding: 7px;
+    width: 68px;
   }
 
   .msn-online-toast-copy {
-    font-size: 23px;
-    padding-bottom: 26px;
+    font-size: 21px;
+    padding-bottom: 22px;
   }
 
   .msn-online-toast-options {
-    font-size: 23px !important;
-    right: 22px;
+    font-size: 21px !important;
+    right: 18px;
   }
 }
 

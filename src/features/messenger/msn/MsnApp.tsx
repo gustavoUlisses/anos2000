@@ -37,14 +37,13 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
   const [isLoginMinimized, setIsLoginMinimized] = useState(false);
   const handledIncomingMessageIds = useRef<Set<string>>(new Set());
   const handledIncomingNudgeIds = useRef<Set<string>>(new Set());
-  const knownOnlineContactIds = useRef<Set<string> | null>(null);
+  const handledOnlineLoginIds = useRef<Set<string>>(new Set());
   const onlineNotificationTimers = useRef<number[]>([]);
   const onlineSoundPlayedAt = useRef(0);
   const offlineNotifiedContactIds = useRef<Set<string>>(new Set());
   const mountedAt = useRef(0);
   const addSystemMessage = messenger.addSystemMessage;
   const contacts = messenger.contacts;
-  const hasPresenceSynced = messenger.hasPresenceSynced;
   const isRealtimeConfigured = messenger.isRealtimeConfigured;
   const onlineProfileIds = messenger.onlineProfileIds;
   const onlineProfileKey = onlineProfileIds.join("|");
@@ -110,6 +109,7 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
     setShowLoginWindow(true);
     handledIncomingMessageIds.current.clear();
     handledIncomingNudgeIds.current.clear();
+    handledOnlineLoginIds.current.clear();
     offlineNotifiedContactIds.current.clear();
     void messenger.logout();
   }
@@ -263,35 +263,29 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
   }, [contactFromNudge, messenger.nudges, profile]);
 
   useEffect(() => {
-    if (!profile || !hasPresenceSynced) {
-      knownOnlineContactIds.current = null;
+    if (!profile) {
       onlineNotificationTimers.current.forEach(window.clearTimeout);
       onlineNotificationTimers.current = [];
+      handledOnlineLoginIds.current.clear();
       return;
     }
 
-    const onlineContacts = contacts.filter((contact) => contact.status === "online" && contact.id !== profile.id);
-    const nextOnlineIds = new Set(onlineContacts.map((contact) => contact.id));
-    const previousOnlineIds = knownOnlineContactIds.current;
+    const newOnlineLogins = messenger.onlineLogins.filter((login) => (
+      login.contact.id !== profile.id &&
+      new Date(login.createdAt).getTime() >= mountedAt.current &&
+      !handledOnlineLoginIds.current.has(login.id)
+    ));
 
-    if (!previousOnlineIds) {
-      knownOnlineContactIds.current = nextOnlineIds;
+    if (!newOnlineLogins.length) {
       return;
     }
 
-    const newOnlineContacts = onlineContacts.filter((contact) => !previousOnlineIds.has(contact.id));
-    knownOnlineContactIds.current = nextOnlineIds;
-
-    if (!newOnlineContacts.length) {
-      return;
-    }
-
+    newOnlineLogins.forEach((login) => handledOnlineLoginIds.current.add(login.id));
     playUserOnlineAlert();
 
-    const createdAt = Date.now();
-    const notifications = newOnlineContacts.map((contact, index) => ({
-      contact,
-      id: `${contact.id}-${createdAt}-${index}`,
+    const notifications = newOnlineLogins.map((login) => ({
+      contact: login.contact,
+      id: login.id,
     }));
 
     for (const notification of notifications) {
@@ -303,7 +297,7 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
     }
 
     setOnlineNotifications((current) => [...current, ...notifications].slice(-maxOnlineNotifications));
-  }, [contacts, hasPresenceSynced, profile]);
+  }, [messenger.onlineLogins, profile]);
 
   useEffect(() => (
     () => {

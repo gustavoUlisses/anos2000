@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
-import type { MsnChatPart, MsnContact, MsnMessage, MsnNudgeEvent, MsnProfile } from "./types";
+import type { MsnChatPart, MsnContact, MsnMessage, MsnNudgeEvent, MsnOnlineEvent, MsnProfile } from "./types";
 
 const clientIdStorageKey = "anos2000:msn:client-id";
 const profileStorageKey = "anos2000:msn:profile";
@@ -166,6 +166,20 @@ function isMsnNudgeEvent(value: unknown): value is MsnNudgeEvent {
   );
 }
 
+function isMsnOnlineEvent(value: unknown): value is MsnOnlineEvent {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<MsnOnlineEvent>;
+
+  return (
+    typeof candidate.createdAt === "string" &&
+    typeof candidate.id === "string" &&
+    isMsnContact(candidate.contact)
+  );
+}
+
 function isPresenceStatusPayload(value: unknown): value is PresenceStatusPayload {
   if (!value || typeof value !== "object") {
     return false;
@@ -294,11 +308,13 @@ async function announceOffline(channel: RealtimeChannel | null, profile: MsnProf
 
 export function useMsnRealtime() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const announceOnlineOnSubscribe = useRef<string | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const lastNudgeReceivedAt = useRef<Map<string, number>>(new Map());
   const lastNudgeSentAt = useRef<Map<string, number>>(new Map());
   const [messages, setMessages] = useState<MsnMessage[]>([]);
   const [nudges, setNudges] = useState<MsnNudgeEvent[]>([]);
+  const [onlineLogins, setOnlineLogins] = useState<MsnOnlineEvent[]>([]);
   const [hasPresenceSynced, setHasPresenceSynced] = useState(false);
   const [onlineProfiles, setOnlineProfiles] = useState<MsnProfile[]>([]);
   const [profile, setProfile] = useState<MsnProfile | null>(() => {
@@ -364,6 +380,13 @@ export function useMsnRealtime() {
         lastNudgeReceivedAt.current.set(payload.senderId, now);
         setNudges((current) => [...current.slice(-20), payload]);
       })
+      .on("broadcast", { event: "user-online" }, ({ payload }: { payload: unknown }) => {
+        if (!isMsnOnlineEvent(payload) || payload.contact.id === profile.id) {
+          return;
+        }
+
+        setOnlineLogins((current) => [...current.slice(-20), payload]);
+      })
       .on("broadcast", { event: "presence-status" }, ({ payload }: { payload: unknown }) => {
         if (!isPresenceStatusPayload(payload) || payload.profile.id === profile.id) {
           return;
@@ -380,6 +403,26 @@ export function useMsnRealtime() {
           ...profile,
           lastSeenAt: new Date().toISOString(),
         });
+
+        if (announceOnlineOnSubscribe.current === profile.id) {
+          announceOnlineOnSubscribe.current = null;
+          await channel.send({
+            event: "user-online",
+            payload: {
+              contact: {
+                avatar: "/msn/images/user.png",
+                id: profile.id,
+                isAdmin: profile.isAdmin,
+                message: profile.personalMessage || (profile.isAdmin ? "Criador do projeto" : ""),
+                nick: profile.nick,
+                status: "online",
+              },
+              createdAt: new Date().toISOString(),
+              id: createId(),
+            } satisfies MsnOnlineEvent,
+            type: "broadcast",
+          }).catch(() => undefined);
+        }
       });
 
     const heartbeat = window.setInterval(() => {
@@ -410,6 +453,7 @@ export function useMsnRealtime() {
   const login = useCallback(async (rawNick: string, password?: string) => {
     const nick = normalizeNick(rawNick);
     const nextProfile = await createSessionProfile(getClientId(), nick, password);
+    announceOnlineOnSubscribe.current = nextProfile.id;
     storeProfile(nextProfile);
     setProfile(nextProfile);
     setOnlineProfiles((current) => dedupeProfiles([...current, nextProfile]));
@@ -428,6 +472,7 @@ export function useMsnRealtime() {
     clearStoredSession();
     setMessages([]);
     setNudges([]);
+    setOnlineLogins([]);
     setHasPresenceSynced(false);
     setOnlineProfiles([]);
     setProfile(null);
@@ -614,6 +659,7 @@ export function useMsnRealtime() {
     logout,
     messages,
     nudges,
+    onlineLogins,
     onlineProfileIds,
     profile,
     sendMessage,
