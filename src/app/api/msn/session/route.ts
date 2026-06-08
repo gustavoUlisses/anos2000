@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getServerEnv } from "@/lib/env";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
 const sessionSchema = z.object({
   clientId: z.string().uuid(),
-  nick: z.string().trim().min(1).max(24).refine(
-    (nick) => nick.toLowerCase() !== "gusdev",
-    "Reserved nick.",
-  ),
+  nick: z.string().trim().min(1).max(24),
+  password: z.string().optional(),
 });
 
 export async function POST(request: Request) {
@@ -18,11 +17,18 @@ export async function POST(request: Request) {
   }
 
   try {
+    const env = getServerEnv();
     const supabase = createAdminSupabaseClient();
     const nick = parsedBody.data.nick;
+    const isGusDev = nick.toLowerCase() === "gusdev";
+
+    if (isGusDev && (!env.MSN_GUSDEV_PASSWORD || parsedBody.data.password !== env.MSN_GUSDEV_PASSWORD)) {
+      return NextResponse.json({ error: "Reserved nick." }, { status: 403 });
+    }
+
     const profile = {
       id: parsedBody.data.clientId,
-      is_admin: false,
+      is_admin: isGusDev,
       last_seen_at: new Date().toISOString(),
       nick,
     };

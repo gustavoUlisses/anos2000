@@ -7,6 +7,7 @@ const publicEnvSchema = z.object({
 
 const serverEnvSchema = publicEnvSchema.extend({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+  MSN_GUSDEV_PASSWORD: z.string().min(1).optional(),
 });
 
 export const publicEnv = publicEnvSchema.parse({
@@ -18,6 +19,7 @@ export function getServerEnv() {
   return serverEnvSchema.parse({
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    MSN_GUSDEV_PASSWORD: process.env.MSN_GUSDEV_PASSWORD,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
   });
 }

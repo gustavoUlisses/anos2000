@@ -1,28 +1,33 @@
 import { useState } from "react";
 
 type MainWindowNotLoggedProps = {
-  handleLogin: (nick: string) => void;
+  handleLogin: (nick: string, password?: string) => Promise<void>;
 };
 
 export function MainWindowNotLogged({ handleLogin }: MainWindowNotLoggedProps) {
   const [error, setError] = useState("");
 
-  function submitLogin(form: HTMLFormElement) {
+  async function submitLogin(form: HTMLFormElement) {
     const formData = new FormData(form);
     const nick = String(formData.get("nick") ?? "").trim().replace(/\s+/g, " ");
+    const password = String(formData.get("password") ?? "");
 
     if (!nick) {
       setError("Digite um nick para entrar.");
       return;
     }
 
-    if (nick.toLowerCase() === "gusdev") {
-      setError("Esse nick esta reservado.");
+    if (nick.toLowerCase() === "gusdev" && !password) {
+      setError("Digite a senha do GusDev.");
       return;
     }
 
     setError("");
-    handleLogin(nick);
+    try {
+      await handleLogin(nick, password);
+    } catch {
+      setError(nick.toLowerCase() === "gusdev" ? "Senha do GusDev invalida." : "Nao foi possivel entrar agora.");
+    }
   }
 
   return (
@@ -34,10 +39,10 @@ export function MainWindowNotLogged({ handleLogin }: MainWindowNotLoggedProps) {
           </div>
           <form
             className="px-4"
-            onSubmit={(event) => {
+            onSubmit={(event) => void (async () => {
               event.preventDefault();
-              submitLogin(event.currentTarget);
-            }}
+              await submitLogin(event.currentTarget);
+            })()}
           >
             <div className="mb-2 d-flex flex-column">
               <label htmlFor="nickInput">Nickname:</label>
@@ -55,7 +60,7 @@ export function MainWindowNotLogged({ handleLogin }: MainWindowNotLoggedProps) {
             {error && <p className="login-error mb-2">{error}</p>}
             <div className="mb-2 d-flex flex-column">
               <label htmlFor="passwordInput">Password:</label>
-              <input type="password" className="border border-secondary" id="passwordInput" placeholder="" autoComplete="on" />
+              <input type="password" className="border border-secondary" id="passwordInput" name="password" placeholder="" autoComplete="on" />
             </div>
             <div className="d-flex gap-1">
               <label htmlFor="statusInput">Status:</label>

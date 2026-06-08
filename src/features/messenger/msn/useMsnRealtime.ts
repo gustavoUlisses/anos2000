@@ -43,10 +43,6 @@ function normalizeNick(rawNick: string) {
     throw new Error("Nick is required.");
   }
 
-  if (cleanedNick.toLowerCase() === "gusdev") {
-    throw new Error("Reserved nick.");
-  }
-
   return cleanedNick;
 }
 
@@ -60,7 +56,7 @@ function getStoredProfile() {
 
     const profile = JSON.parse(storedProfile) as MsnProfile;
 
-    if (profile.nick?.toLowerCase() === "gusdev") {
+    if (profile.nick?.toLowerCase() === "gusdev" && !profile.isAdmin) {
       localStorage.removeItem(profileStorageKey);
       return null;
     }
@@ -128,7 +124,8 @@ function dedupeMessages(messages: MsnMessage[]) {
   });
 }
 
-async function createSessionProfile(clientId: string, nick: string) {
+async function createSessionProfile(clientId: string, nick: string, password?: string) {
+  const isGusDev = nick.toLowerCase() === "gusdev";
   const fallbackProfile: MsnProfile = {
     id: clientId,
     isAdmin: false,
@@ -138,18 +135,26 @@ async function createSessionProfile(clientId: string, nick: string) {
 
   try {
     const response = await fetch("/api/msn/session", {
-      body: JSON.stringify({ clientId, nick }),
+      body: JSON.stringify({ clientId, nick, password }),
       headers: { "Content-Type": "application/json" },
       method: "POST",
     });
 
     if (!response.ok) {
+      if (isGusDev) {
+        throw new Error("Nick GusDev reservado.");
+      }
+
       return fallbackProfile;
     }
 
     const data = await response.json() as { profile?: MsnProfile };
     return data.profile ?? fallbackProfile;
   } catch {
+    if (isGusDev) {
+      throw new Error("Nick GusDev reservado.");
+    }
+
     return fallbackProfile;
   }
 }
@@ -259,9 +264,9 @@ export function useMsnRealtime() {
     };
   }, [profile, supabase]);
 
-  const login = useCallback(async (rawNick: string) => {
+  const login = useCallback(async (rawNick: string, password?: string) => {
     const nick = normalizeNick(rawNick);
-    const nextProfile = await createSessionProfile(getClientId(), nick);
+    const nextProfile = await createSessionProfile(getClientId(), nick, password);
     storeProfile(nextProfile);
     setProfile(nextProfile);
     setOnlineProfiles((current) => dedupeProfiles([...current, nextProfile]));

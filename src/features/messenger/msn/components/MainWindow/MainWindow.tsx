@@ -12,7 +12,7 @@ type MainWindowProps = {
   contacts: MsnContact[];
   isRealtimeConfigured: boolean;
   onClose: () => void;
-  onLogin: (nick: string) => Promise<void>;
+  onLogin: (nick: string, password?: string) => Promise<void>;
   onMinimize: () => void;
   onOpenChat: (contact: MsnContact) => void;
   profile: MsnProfile | null;
@@ -30,10 +30,10 @@ export function MainWindow({
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  async function login(nick: string) {
+  async function login(nick: string, password?: string) {
     setIsLoading(true);
     try {
-      await onLogin(nick);
+      await onLogin(nick, password);
     } finally {
       setIsLoading(false);
     }
