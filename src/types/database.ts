@@ -13,6 +13,7 @@ export type Database = {
         Row: {
           id: string;
           nick: string;
+          personal_message: string;
           is_admin: boolean;
           created_at: string;
           last_seen_at: string | null;
@@ -20,6 +21,7 @@ export type Database = {
         Insert: {
           id?: string;
           nick: string;
+          personal_message?: string;
           is_admin?: boolean;
           created_at?: string;
           last_seen_at?: string | null;
@@ -27,6 +29,7 @@ export type Database = {
         Update: {
           id?: string;
           nick?: string;
+          personal_message?: string;
           is_admin?: boolean;
           created_at?: string;
           last_seen_at?: string | null;

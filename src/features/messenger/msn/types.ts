@@ -14,13 +14,13 @@ export type MsnProfile = {
   isAdmin: boolean;
   lastSeenAt: string;
   nick: string;
+  personalMessage: string;
 };
 
 export type MsnContact = {
   avatar: string;
   id: string;
   isAdmin?: boolean;
-  isBot?: boolean;
   message: string;
   nick: string;
   status: "online" | "away" | "offline";

@@ -10,6 +10,10 @@
   background: linear-gradient(180deg, #073D7D 0%, #3983A6 8%, #8DBBBB 15%, #ecf5f8 25%);
 }
 
+.login-window.is-logged-in {
+  height: auto;
+}
+
 .login-window span {
   font-size: 12px;
 }
@@ -62,6 +66,40 @@ details {
   user-select: none;
 }
 
+.logged-window-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.personal-message-button {
+  all: unset;
+  cursor: text;
+  display: block;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.personal-message-input {
+  border: 1px solid #98a8b5;
+  font-size: 12px;
+  height: 18px;
+  line-height: 18px;
+  padding: 0 3px;
+  width: 175px;
+}
+
+.logged-window-ad img {
+  display: block;
+}
+
+.msn-account-footer {
+  padding-left: 2px;
+  padding-right: 8px;
+}
+
 .logout-button {
+  margin-right: 4px;
   min-width: 44px;
+  padding-inline: 10px;
 }

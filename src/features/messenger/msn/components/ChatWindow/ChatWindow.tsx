@@ -270,7 +270,7 @@ export function ChatWindow({
             </div>
           </div>
         </div>
-        <div className="position-absolute bottom-0">
+        <div className="chat-window-footer">
           <img src="/msn/favicon.ico" alt="Windows Live Messenger icon" width="25" className="p-1" />
           <span className="ps-1">Windows Live Messenger</span>
         </div>

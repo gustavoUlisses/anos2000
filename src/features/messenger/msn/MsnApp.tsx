@@ -55,7 +55,7 @@ export function MsnApp({ onClose }: MsnAppProps) {
     return existingContact ?? {
       avatar: "/msn/images/user.png",
       id: message.senderId,
-      message: "Online agora",
+      message: "<Enter a personal message>",
       nick: message.senderNick,
       status: "online",
     };
@@ -94,6 +94,7 @@ export function MsnApp({ onClose }: MsnAppProps) {
             onLogout={logout}
             onMinimize={() => setIsLoginMinimized(true)}
             onOpenChat={openChat}
+            onPersonalMessageChange={messenger.updatePersonalMessage}
             profile={messenger.profile}
           />
         </div>

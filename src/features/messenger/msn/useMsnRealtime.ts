@@ -8,6 +8,7 @@ import type { MsnChatPart, MsnContact, MsnMessage, MsnProfile } from "./types";
 const clientIdStorageKey = "anos2000:msn:client-id";
 const profileStorageKey = "anos2000:msn:profile";
 const gusDevId = "gusdev-offline";
+const defaultPersonalMessage = "<Enter a personal message>";
 
 type PresencePayload = MsnProfile;
 
@@ -46,6 +47,18 @@ function normalizeNick(rawNick: string) {
   return cleanedNick;
 }
 
+function normalizePersonalMessage(rawMessage: string | undefined) {
+  const cleanedMessage = rawMessage?.trim().replace(/\s+/g, " ").slice(0, 80);
+  return cleanedMessage || defaultPersonalMessage;
+}
+
+function ensureProfileDefaults(profile: MsnProfile): MsnProfile {
+  return {
+    ...profile,
+    personalMessage: normalizePersonalMessage(profile.personalMessage),
+  };
+}
+
 function getStoredProfile() {
   try {
     const storedProfile = localStorage.getItem(profileStorageKey);
@@ -61,7 +74,7 @@ function getStoredProfile() {
       return null;
     }
 
-    return profile;
+    return ensureProfileDefaults(profile);
   } catch {
     return null;
   }
@@ -136,11 +149,17 @@ async function createSessionProfile(clientId: string, nick: string, password?: s
     isAdmin: false,
     lastSeenAt: new Date().toISOString(),
     nick,
+    personalMessage: defaultPersonalMessage,
   };
 
   try {
     const response = await fetch("/api/msn/session", {
-      body: JSON.stringify({ clientId, nick, password }),
+      body: JSON.stringify({
+        clientId,
+        nick,
+        password,
+        personalMessage: isGusDev ? "Criador do projeto" : defaultPersonalMessage,
+      }),
       headers: { "Content-Type": "application/json" },
       method: "POST",
     });
@@ -154,7 +173,7 @@ async function createSessionProfile(clientId: string, nick: string, password?: s
     }
 
     const data = await response.json() as { profile?: MsnProfile };
-    return data.profile ?? fallbackProfile;
+    return data.profile ? ensureProfileDefaults(data.profile) : fallbackProfile;
   } catch {
     if (isGusDev) {
       throw new Error("Nick GusDev reservado.");
@@ -196,6 +215,18 @@ async function fetchConversation(profileId: string, contactId: string) {
   }
 }
 
+async function persistPersonalMessage(profileId: string, personalMessage: string) {
+  if (!isUuid(profileId)) {
+    return;
+  }
+
+  await fetch("/api/msn/session", {
+    body: JSON.stringify({ clientId: profileId, personalMessage }),
+    headers: { "Content-Type": "application/json" },
+    method: "PATCH",
+  }).catch(() => undefined);
+}
+
 export function useMsnRealtime() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -225,7 +256,8 @@ export function useMsnRealtime() {
       const presenceState = channel.presenceState() as Record<string, PresencePayload[]>;
       const profiles = Object.values(presenceState)
         .flat()
-        .filter((presenceProfile) => presenceProfile.id && presenceProfile.nick);
+        .filter((presenceProfile) => presenceProfile.id && presenceProfile.nick)
+        .map(ensureProfileDefaults);
 
       setOnlineProfiles(dedupeProfiles(profiles));
     }
@@ -261,8 +293,17 @@ export function useMsnRealtime() {
       });
     }, 25_000);
 
+    function untrackPresence() {
+      void channel.untrack();
+    }
+
+    window.addEventListener("beforeunload", untrackPresence);
+    window.addEventListener("pagehide", untrackPresence);
+
     return () => {
       window.clearInterval(heartbeat);
+      window.removeEventListener("beforeunload", untrackPresence);
+      window.removeEventListener("pagehide", untrackPresence);
       channelRef.current = null;
       void channel.untrack();
       void supabase.removeChannel(channel);
@@ -283,6 +324,32 @@ export function useMsnRealtime() {
     setOnlineProfiles([]);
     setProfile(null);
   }, []);
+
+  const updatePersonalMessage = useCallback((rawMessage: string) => {
+    if (!profile) {
+      return;
+    }
+
+    const personalMessage = normalizePersonalMessage(rawMessage);
+    const nextProfile: MsnProfile = {
+      ...profile,
+      lastSeenAt: new Date().toISOString(),
+      personalMessage,
+    };
+
+    storeProfile(nextProfile);
+    setProfile(nextProfile);
+    setOnlineProfiles((current) => dedupeProfiles([
+      ...current.filter((onlineProfile) => onlineProfile.id !== nextProfile.id),
+      nextProfile,
+    ]));
+
+    if (channelRef.current) {
+      void channelRef.current.track(nextProfile);
+    }
+
+    void persistPersonalMessage(nextProfile.id, personalMessage);
+  }, [profile]);
 
   const loadConversation = useCallback(async (contactId: string) => {
     if (!profile) {
@@ -320,23 +387,6 @@ export function useMsnRealtime() {
       });
     }
 
-    if (contact.isBot) {
-      window.setTimeout(() => {
-        setMessages((current) => dedupeMessages([
-          ...current,
-          {
-            createdAt: new Date().toISOString(),
-            id: createId(),
-            parts: [{ text: "Recebi sua mensagem. Em breve eu conecto voce com outros visitantes online.", type: "text" }],
-            recipientId: profile.id,
-            senderId: contact.id,
-            senderNick: contact.nick,
-          },
-        ]));
-      }, 700);
-      return;
-    }
-
     await persistMessage(message);
   }, [profile]);
 
@@ -352,7 +402,7 @@ export function useMsnRealtime() {
         avatar: "/msn/images/user.png",
         id: onlineProfile.id,
         isAdmin: onlineProfile.isAdmin,
-        message: onlineProfile.isAdmin ? "Criador do projeto" : "Online agora",
+        message: onlineProfile.personalMessage || (onlineProfile.isAdmin ? "Criador do projeto" : defaultPersonalMessage),
         nick: onlineProfile.nick,
         status: "online",
       }));
@@ -370,15 +420,6 @@ export function useMsnRealtime() {
         status: "offline",
       });
     }
-
-    offlineContacts.push({
-      avatar: "/msn/images/msn.webp",
-      id: "anos2000-bot",
-      isBot: true,
-      message: supabase ? "Aguardando visitantes online" : "Modo local sem Supabase",
-      nick: "Anos2000 Bot",
-      status: "away",
-    });
 
     return [...onlineContacts, ...offlineContacts];
   }, [onlineProfiles, profile, supabase]);
@@ -404,6 +445,7 @@ export function useMsnRealtime() {
     messages,
     profile,
     sendMessage,
+    updatePersonalMessage,
   };
 }
 

@@ -3,12 +3,14 @@ create extension if not exists "pgcrypto";
 create table if not exists public.profiles (
   id uuid primary key default gen_random_uuid(),
   nick text not null,
+  personal_message text not null default '<Enter a personal message>',
   is_admin boolean not null default false,
   created_at timestamptz not null default now(),
   last_seen_at timestamptz
 );
 
 alter table public.profiles drop constraint if exists profiles_nick_key;
+alter table public.profiles add column if not exists personal_message text not null default '<Enter a personal message>';
 
 create table if not exists public.chat_messages (
   id uuid primary key default gen_random_uuid(),

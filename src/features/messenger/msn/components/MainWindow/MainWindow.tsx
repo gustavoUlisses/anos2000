@@ -16,6 +16,7 @@ type MainWindowProps = {
   onLogout: () => void;
   onMinimize: () => void;
   onOpenChat: (contact: MsnContact) => void;
+  onPersonalMessageChange: (message: string) => void;
   profile: MsnProfile | null;
 };
 
@@ -27,6 +28,7 @@ export function MainWindow({
   onLogout,
   onMinimize,
   onOpenChat,
+  onPersonalMessageChange,
   profile,
 }: MainWindowProps) {
   const nodeRef = useRef<HTMLDivElement | null>(null);
@@ -43,7 +45,7 @@ export function MainWindow({
 
   return (
     <Draggable handle=".handle" nodeRef={nodeRef}>
-      <div ref={nodeRef} className={`login-window p-2 position-relative ${isLoading ? "isLoading" : ""}`}>
+      <div ref={nodeRef} className={`login-window p-2 position-relative ${isLoading ? "isLoading" : ""} ${profile && !isLoading ? "is-logged-in" : ""}`}>
         <LoginWindowToolbar onClose={onClose} onMinimize={onMinimize} />
 
         {isLoading && <MainWindowLoading handleClick={() => setIsLoading(false)} />}
@@ -58,6 +60,7 @@ export function MainWindow({
             isRealtimeConfigured={isRealtimeConfigured}
             onLogout={onLogout}
             onOpenChat={onOpenChat}
+            onPersonalMessageChange={onPersonalMessageChange}
             profile={profile}
           />
         )}

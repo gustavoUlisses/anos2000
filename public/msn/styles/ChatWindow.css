@@ -1,10 +1,11 @@
 .chat-window {
   width: 500px;
-  height: 550px;
+  height: auto;
   border: 1px solid #848484;
   box-shadow: inset 0px 0px 4px 1px #ddddddc2;
   background: url(/msn/images/msn-background.png), #E8F2F4;
   background-size: cover;
+  padding-bottom: 3px;
 }
 
 .send-button::after {
@@ -118,6 +119,10 @@
   color: gray;
   font-size: 11px;
   padding-inline: 4px;
+}
+
+.chat-window-footer {
+  margin-top: 4px;
 }
 
 ::-webkit-scrollbar {
