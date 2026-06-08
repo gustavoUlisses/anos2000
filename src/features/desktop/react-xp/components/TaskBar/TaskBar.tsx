@@ -90,7 +90,7 @@ const TaskBar = () => {
                         <button onClick={systemTrayIconClickHandler}>
                             <img src="/icon__info.png" width="14" height="14" className="cursor-pointer mr-2 min-w-[1.4rem]"></img>
                         </button>
-                        <Tooltip heading="Windows XP React Edition" content="Still a work in progress, but this is a semi-authentic recreation of Windows XP created using React & Typescript." systemTrayIconDismissed={systemTrayIconDismissed} setSystemTrayIconDismissed={setSystemTrayIconDismissed} />
+                        <Tooltip heading="Bem-vindo ao Anos 2000" content="Este site e uma experiencia nostalgica inspirada na internet dos anos 2000. Explore com calma, use com responsabilidade, respeite os outros visitantes e divirta-se. Para apoiar o projeto via Pix: gusdevsp@gmail.com" systemTrayIconDismissed={systemTrayIconDismissed} setSystemTrayIconDismissed={setSystemTrayIconDismissed} />
                     </li>
                 </ul>
                 <span className="whitespace-nowrap">{formattedTime}</span>

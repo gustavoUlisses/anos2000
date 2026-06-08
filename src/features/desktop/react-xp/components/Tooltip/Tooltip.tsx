@@ -20,10 +20,6 @@ const Tooltip = ({ heading, content, systemTrayIconDismissed, setSystemTrayIconD
                 <button className={styles.tooltipClose} onClick={onClickHandler}><span>+</span></button>
             </span>
             <p className="text-left mb-3">{content}</p>
-            <div className={`${styles.social} flex gap-3`}>
-                <a href="https://github.com/Cyanoxide/react-xp" target="_blank" rel="noreferrer">Star</a>
-                <a href="https://github.com/Cyanoxide" target="_blank" rel="noreferrer">Follow</a>
-            </div>
         </span>
     );
 };

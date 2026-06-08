@@ -216,10 +216,10 @@
         "width": 500
     },
     "readme": {
-        "title": "ReadMe.txt",
+        "title": "Leia-me.txt",
         "iconLarge": "/icon__notepad--large.png",
         "component": "Notepad",
-        "content": "Welcome to my React XP project.\n\nI wanted to recreate Windows XP using React and Typescript.\nIt's still a work in progress. Many features are not yet implemented, but I plan to continue adding new features as I can.\n\nSo far, I've added the initial boot sequence, logout/shutdown functionality, File Explorer, Internet Explorer (with Wayback Machine), Notepad, the Run window, as well as core functionalities like movable desktop icons and windows.\n\nI'm currently working on the Display Properties window, which can currently be accessed from the Start Menu. So far, I've implemented support for wallpapers, resolution changes, themes, and the ability to disable scanlines.",
+        "content": "Ola, visitante!\n\nEsse projeto foi feito para nostalgicos da internet, daqueles que ainda lembram do barulho do MSN, das salas de bate-papo, do Winamp tocando no canto da tela e da sensacao de ligar um Windows XP novinho.\n\nA ideia aqui e criar um cantinho interativo dos anos 2000: explore, abra os programas, clique nas pastas, converse, ouca musica e aproveite a viagem.\n\nUse com responsabilidade, respeite outras pessoas e se divirta. A internet antiga era caotica, mas a gente pode trazer de volta so a parte boa.\n\nSe quiser apoiar o projeto, meu Pix e:\ngusdevsp@gmail.com\n\nObrigado por visitar.\n- GusDev",
         "height": 290,
         "width": 330,
         "top": 25,
