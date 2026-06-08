@@ -37,6 +37,12 @@ export const updateCurrentActiveWindow = (windowId: string | number, currentWind
 };
 
 export const openApplication = (appId: string, currentWindows: currentWindow[], dispatch: (value: Action) => void) => {
+    if (appId === "msn") {
+        dispatch({ type: "SET_IS_MESSENGER_OPEN", payload: true });
+        dispatch({ type: "SET_IS_START_VISIBLE", payload: false });
+        return;
+    }
+
     const newWindow: currentWindow = {
         id: generateUniqueId(),
         appId,

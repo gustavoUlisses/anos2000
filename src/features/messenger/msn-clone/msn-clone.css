@@ -1,11 +1,10 @@
 .msn-clone {
-  align-items: flex-start;
   color: #111;
-  display: flex;
-  gap: 14px;
-  height: 100%;
-  overflow: auto;
-  padding: 10px;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  position: absolute;
+  z-index: 40;
 }
 
 .msn-clone * {
@@ -71,6 +70,19 @@
 .msn-clone .dropdown-menu { display: none; position: absolute; }
 .msn-clone .dropup { position: relative; }
 
+.msn-clone .msn-draggable-window {
+  left: 0;
+  pointer-events: auto;
+  position: absolute;
+  top: 0;
+  touch-action: none;
+  user-select: none;
+}
+
+.msn-clone .handle {
+  cursor: default;
+}
+
 .msn-clone button {
   background: linear-gradient(0deg, #D4E8F1 0%, #E1E8EE 75%);
   border: 1px solid #b1b1b16b;
@@ -83,7 +95,6 @@
   background: linear-gradient(180deg, #073D7D 0%, #3983A6 8%, #8DBBBB 15%, #ecf5f8 25%);
   border: 1px solid gray;
   border-radius: 6px;
-  flex: 0 0 auto;
   height: 550px;
   width: 300px;
 }
@@ -164,7 +175,6 @@
   background-size: cover;
   border: 1px solid #848484;
   box-shadow: inset 0 0 4px 1px #ddddddc2;
-  flex: 0 0 auto;
   height: 550px;
   width: 500px;
 }
@@ -269,10 +279,6 @@
 }
 
 @media (max-width: 768px) {
-  .msn-clone {
-    flex-direction: column;
-  }
-
   .msn-clone .chat-window,
   .msn-clone .login-window {
     max-width: 100%;

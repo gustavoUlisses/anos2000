@@ -43,9 +43,7 @@
         "title": "Windows Live Messenger",
         "icon": "/images/msn.webp",
         "iconLarge": "/images/msn.webp",
-        "component": "MsnMessenger",
-        "height": 610,
-        "width": 840
+        "content": "placeholder"
     },
     "recentDocuments": {
         "title": "My Recent Documents",

@@ -30,6 +30,8 @@ export const reducer = (state: State, action: Action): State => {
         return { ...state, initiationStage: action.payload };
     case "SET_IS_INITIAL_BOOT":
         return { ...state, isInitialBoot: action.payload };
+    case "SET_IS_MESSENGER_OPEN":
+        return { ...state, isMessengerOpen: action.payload };
     case "SET_TRANSITION_LABEL":
         return { ...state, transitionLabel: action.payload };
     case "SET_IS_CRT_ENABLED": 
@@ -56,6 +58,7 @@ export const initialState: State = {
     windowsInitiationState: "bios",
     initiationStage: 0,
     isInitialBoot: true,
+    isMessengerOpen: false,
     transitionLabel: "",
     isCRTEnabled: true,
     themeColor: "blue",

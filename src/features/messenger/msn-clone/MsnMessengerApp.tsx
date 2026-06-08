@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { ChatWindow } from "./ChatWindow";
+import { DraggableWindow } from "./DraggableWindow";
 import { MainWindowLoading } from "./MainWindowLoading";
 import { MainWindowLogged } from "./MainWindowLogged";
 import { MainWindowNotLogged } from "./MainWindowNotLogged";
@@ -32,7 +33,11 @@ const contacts: MessengerContact[] = [
   },
 ];
 
-export function MsnMessengerApp() {
+type MsnMessengerAppProps = {
+  onClose: () => void;
+};
+
+export function MsnMessengerApp({ onClose }: MsnMessengerAppProps) {
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -97,39 +102,43 @@ export function MsnMessengerApp() {
 
   return (
     <div className="msn-clone">
-      <div className={`login-window p-2 position-relative ${isLoading ? "isLoading" : ""}`}>
-        <WindowToolbar />
+      <DraggableWindow initialX={24} initialY={24}>
+        <div className={`login-window p-2 position-relative ${isLoading ? "isLoading" : ""}`}>
+          <WindowToolbar onClose={onClose} />
 
-        {isLoading && <MainWindowLoading onCancel={() => setIsLoading(false)} />}
+          {isLoading && <MainWindowLoading onCancel={() => setIsLoading(false)} />}
 
-        {!isLoggedIn && !isLoading && (
-          <MainWindowNotLogged
-            nick={nick}
-            onLogin={login}
-            setNick={setNick}
-            setStatus={setStatus}
-            status={status}
-          />
-        )}
+          {!isLoggedIn && !isLoading && (
+            <MainWindowNotLogged
+              nick={nick}
+              onLogin={login}
+              setNick={setNick}
+              setStatus={setStatus}
+              status={status}
+            />
+          )}
 
-        {isLoggedIn && !isLoading && (
-          <MainWindowLogged
-            activeContactId={activeContactId}
-            contacts={contacts}
-            nick={displayNick}
-            onOpenChat={openChat}
-          />
-        )}
-      </div>
+          {isLoggedIn && !isLoading && (
+            <MainWindowLogged
+              activeContactId={activeContactId}
+              contacts={contacts}
+              nick={displayNick}
+              onOpenChat={openChat}
+            />
+          )}
+        </div>
+      </DraggableWindow>
 
       {activeContact && (
-        <ChatWindow
-          contact={activeContact}
-          messages={messagesByContact[activeContact.id] ?? []}
-          nick={displayNick}
-          onClose={() => setActiveContactId(null)}
-          onSendMessage={(body) => sendMessage(activeContact, body)}
-        />
+        <DraggableWindow initialX={368} initialY={24}>
+          <ChatWindow
+            contact={activeContact}
+            messages={messagesByContact[activeContact.id] ?? []}
+            nick={displayNick}
+            onClose={() => setActiveContactId(null)}
+            onSendMessage={(body) => sendMessage(activeContact, body)}
+          />
+        </DraggableWindow>
       )}
     </div>
   );

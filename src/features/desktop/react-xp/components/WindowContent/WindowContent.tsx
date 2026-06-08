@@ -12,7 +12,6 @@ type WindowContentProps = WindowAppProps;
 const windowRegistry: Record<string, () => Promise<{ default: React.ComponentType<any> }>> = {
     FileExplorer: () => import("../Applications/FileExplorer/FileExplorer"),
     InternetExplorer: () => import("../Applications/InternetExplorer/InternetExplorer"),
-    MsnMessenger: () => import("@/features/messenger/msn-clone/MsnMessengerApp").then((module) => ({ default: module.MsnMessengerApp })),
     Notepad: () => import("../Applications/Notepad/Notepad"),
     Run: () => import("../Applications/Run/Run"),
     Settings: () => import("../Applications/Settings/Settings"),

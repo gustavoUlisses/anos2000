@@ -5,9 +5,10 @@ import TaskBar from "./components/TaskBar/TaskBar";
 import Wallpaper from "./components/Wallpaper/Wallpaper";
 import WindowManagement from "./components/WindowManagement/WindowManagement";
 import { useContext } from "./context/context";
+import { MsnMessengerApp } from "@/features/messenger/msn-clone/MsnMessengerApp";
 
 function App() {
-    const {windowsInitiationState, isInitialBoot, initiationStage, dispatch} = useContext();
+    const {windowsInitiationState, isInitialBoot, initiationStage, isMessengerOpen, dispatch} = useContext();
 
     useEffect(() => {
         const delayMap = [500, 500, 500];
@@ -38,6 +39,9 @@ function App() {
             <Activity mode={(initiationStage > 2) ? "visible" : "hidden"}>
                 <WindowManagement />
             </Activity>
+            {initiationStage > 0 && isMessengerOpen && (
+                <MsnMessengerApp onClose={() => dispatch({ type: "SET_IS_MESSENGER_OPEN", payload: false })} />
+            )}
         </>
     );
 }

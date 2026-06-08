@@ -61,6 +61,7 @@ export interface State {
     windowsInitiationState: windowsInitiationState;
     initiationStage: number;
     isInitialBoot: boolean;
+    isMessengerOpen: boolean;
     transitionLabel: string;
     isCRTEnabled: boolean;
     themeColor: themeColor;
@@ -77,6 +78,7 @@ export type Action =
     | { type: "SET_WINDOWS_INITIATION_STATE"; payload: windowsInitiationState; }
     | { type: "SET_INITIATION_STAGE"; payload: number; }
     | { type: "SET_IS_INITIAL_BOOT"; payload: boolean; }
+    | { type: "SET_IS_MESSENGER_OPEN"; payload: boolean; }
     | { type: "SET_TRANSITION_LABEL"; payload: string; }
     | { type: "SET_IS_CRT_ENABLED"; payload: boolean; }
     | { type: "SET_THEME_COLOR"; payload: themeColor;}
