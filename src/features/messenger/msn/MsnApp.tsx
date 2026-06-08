@@ -19,20 +19,32 @@ type OpenChat = {
   nudgeSignal: number;
 };
 
+type OnlineNotification = {
+  contact: MsnContact;
+  id: string;
+};
+
 const msnMainTaskbarId = "msn-main";
 const msnChatTaskbarPrefix = "msn-chat:";
+const onlineNotificationDurationMs = 8_500;
+const maxOnlineNotifications = 5;
 
 export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
   const messenger = useMsnRealtime();
   const [openChats, setOpenChats] = useState<OpenChat[]>([]);
+  const [onlineNotifications, setOnlineNotifications] = useState<OnlineNotification[]>([]);
   const [showLoginWindow, setShowLoginWindow] = useState(true);
   const [isLoginMinimized, setIsLoginMinimized] = useState(false);
   const handledIncomingMessageIds = useRef<Set<string>>(new Set());
   const handledIncomingNudgeIds = useRef<Set<string>>(new Set());
+  const knownOnlineContactIds = useRef<Set<string> | null>(null);
+  const onlineNotificationTimers = useRef<number[]>([]);
+  const onlineSoundPlayedAt = useRef(0);
   const offlineNotifiedContactIds = useRef<Set<string>>(new Set());
   const mountedAt = useRef(0);
   const addSystemMessage = messenger.addSystemMessage;
   const contacts = messenger.contacts;
+  const hasPresenceSynced = messenger.hasPresenceSynced;
   const isRealtimeConfigured = messenger.isRealtimeConfigured;
   const onlineProfileIds = messenger.onlineProfileIds;
   const onlineProfileKey = onlineProfileIds.join("|");
@@ -94,6 +106,7 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
   function logout() {
     setOpenChats([]);
     setIsLoginMinimized(false);
+    setOnlineNotifications([]);
     setShowLoginWindow(true);
     handledIncomingMessageIds.current.clear();
     handledIncomingNudgeIds.current.clear();
@@ -104,6 +117,22 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
   function playIncomingMessageAlert() {
     const audio = new Audio("/msn/sounds/msn-chat-alert.mp3");
     void audio.play().catch(() => undefined);
+  }
+
+  function playUserOnlineAlert() {
+    const now = Date.now();
+
+    if (now - onlineSoundPlayedAt.current < 900) {
+      return;
+    }
+
+    onlineSoundPlayedAt.current = now;
+    const audio = new Audio("/msn/sounds/msn-user-online.mp3");
+    void audio.play().catch(() => undefined);
+  }
+
+  function dismissOnlineNotification(notificationId: string) {
+    setOnlineNotifications((current) => current.filter((notification) => notification.id !== notificationId));
   }
 
   const contactFromIncomingMessage = useCallback((message: MsnMessage): MsnContact => {
@@ -227,6 +256,55 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
       return nextChats;
     });
   }, [contactFromNudge, messenger.nudges, profile]);
+
+  useEffect(() => {
+    if (!profile || !hasPresenceSynced) {
+      knownOnlineContactIds.current = null;
+      onlineNotificationTimers.current.forEach(window.clearTimeout);
+      onlineNotificationTimers.current = [];
+      return;
+    }
+
+    const onlineContacts = contacts.filter((contact) => contact.status === "online" && contact.id !== profile.id);
+    const nextOnlineIds = new Set(onlineContacts.map((contact) => contact.id));
+    const previousOnlineIds = knownOnlineContactIds.current;
+
+    if (!previousOnlineIds) {
+      knownOnlineContactIds.current = nextOnlineIds;
+      return;
+    }
+
+    const newOnlineContacts = onlineContacts.filter((contact) => !previousOnlineIds.has(contact.id));
+    knownOnlineContactIds.current = nextOnlineIds;
+
+    if (!newOnlineContacts.length) {
+      return;
+    }
+
+    playUserOnlineAlert();
+
+    const createdAt = Date.now();
+    const notifications = newOnlineContacts.map((contact, index) => ({
+      contact,
+      id: `${contact.id}-${createdAt}-${index}`,
+    }));
+
+    for (const notification of notifications) {
+      const timer = window.setTimeout(() => {
+        dismissOnlineNotification(notification.id);
+      }, onlineNotificationDurationMs);
+
+      onlineNotificationTimers.current.push(timer);
+    }
+
+    setOnlineNotifications((current) => [...current, ...notifications].slice(-maxOnlineNotifications));
+  }, [contacts, hasPresenceSynced, profile]);
+
+  useEffect(() => (
+    () => {
+      onlineNotificationTimers.current.forEach(window.clearTimeout);
+    }
+  ), []);
 
   useEffect(() => {
     if (!profile || !isRealtimeConfigured) {
@@ -388,6 +466,39 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
       ) : (
         <div style={{ width: "500px", height: "550px" }} />
       )}
+
+      {onlineNotifications.length ? (
+        <div className="msn-online-notifications" aria-live="polite">
+          {onlineNotifications.map((notification) => (
+            <div className="msn-online-toast" key={notification.id}>
+              <div className="msn-online-toast-header">
+                <div className="msn-online-toast-title">
+                  <img src="/msn/images/msn.webp" alt="" />
+                  <span>Windows Live Messenger</span>
+                </div>
+                <button
+                  aria-label="Fechar"
+                  className="msn-online-toast-close"
+                  onClick={() => dismissOnlineNotification(notification.id)}
+                  type="button"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="msn-online-toast-body">
+                <div className="msn-online-toast-avatar">
+                  <img src={notification.contact.avatar} alt="" />
+                </div>
+                <div className="msn-online-toast-copy">
+                  <strong>{notification.contact.nick}</strong>
+                  <span>acabou de entrar.</span>
+                </div>
+              </div>
+              <button className="msn-online-toast-options" type="button">Opções</button>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
     </div>
   );

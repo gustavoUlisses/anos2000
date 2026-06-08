@@ -299,6 +299,7 @@ export function useMsnRealtime() {
   const lastNudgeSentAt = useRef<Map<string, number>>(new Map());
   const [messages, setMessages] = useState<MsnMessage[]>([]);
   const [nudges, setNudges] = useState<MsnNudgeEvent[]>([]);
+  const [hasPresenceSynced, setHasPresenceSynced] = useState(false);
   const [onlineProfiles, setOnlineProfiles] = useState<MsnProfile[]>([]);
   const [profile, setProfile] = useState<MsnProfile | null>(() => {
     if (typeof window === "undefined") {
@@ -328,6 +329,7 @@ export function useMsnRealtime() {
         .map(ensureProfileDefaults);
 
       setOnlineProfiles(dedupeProfiles(profiles));
+      setHasPresenceSynced(true);
     }
 
     channel
@@ -426,6 +428,7 @@ export function useMsnRealtime() {
     clearStoredSession();
     setMessages([]);
     setNudges([]);
+    setHasPresenceSynced(false);
     setOnlineProfiles([]);
     setProfile(null);
   }, [profile, supabase]);
@@ -604,6 +607,7 @@ export function useMsnRealtime() {
     addSystemMessage,
     contacts,
     getConversation,
+    hasPresenceSynced,
     isRealtimeConfigured: Boolean(supabase),
     loadConversation,
     login,
