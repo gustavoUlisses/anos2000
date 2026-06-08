@@ -6,24 +6,36 @@ import { LoginWindowToolbar } from "./LoginWindowToolbar";
 import { MainWindowLoading } from "./MainWindowLoading";
 import { MainWindowLogged } from "./MainWindowLogged";
 import { MainWindowNotLogged } from "./MainWindowNotLogged";
+import type { MsnContact, MsnProfile } from "../../types";
 
 type MainWindowProps = {
+  contacts: MsnContact[];
+  isRealtimeConfigured: boolean;
   onClose: () => void;
+  onLogin: (nick: string) => Promise<void>;
   onMinimize: () => void;
-  toggleChatWindow: () => void;
+  onOpenChat: (contact: MsnContact) => void;
+  profile: MsnProfile | null;
 };
 
-export function MainWindow({ onClose, onMinimize, toggleChatWindow }: MainWindowProps) {
+export function MainWindow({
+  contacts,
+  isRealtimeConfigured,
+  onClose,
+  onLogin,
+  onMinimize,
+  onOpenChat,
+  profile,
+}: MainWindowProps) {
   const nodeRef = useRef<HTMLDivElement | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  function handleClick(value: boolean) {
+  async function login(nick: string) {
     setIsLoading(true);
-    setTimeout(() => {
+    await onLogin(nick);
+    window.setTimeout(() => {
       setIsLoading(false);
-    }, 2000);
-    setIsLoggedIn(value);
+    }, 700);
   }
 
   return (
@@ -31,14 +43,19 @@ export function MainWindow({ onClose, onMinimize, toggleChatWindow }: MainWindow
       <div ref={nodeRef} className={`login-window p-2 position-relative ${isLoading ? "isLoading" : ""}`}>
         <LoginWindowToolbar onClose={onClose} onMinimize={onMinimize} />
 
-        {isLoading && <MainWindowLoading handleClick={() => handleClick(false)} />}
+        {isLoading && <MainWindowLoading handleClick={() => setIsLoading(false)} />}
 
-        {!isLoggedIn && !isLoading && (
-          <MainWindowNotLogged handleClick={() => handleClick(true)} />
+        {!profile && !isLoading && (
+          <MainWindowNotLogged handleLogin={login} />
         )}
 
-        {isLoggedIn && !isLoading && (
-          <MainWindowLogged toggleChatWindow={toggleChatWindow} />
+        {profile && !isLoading && (
+          <MainWindowLogged
+            contacts={contacts}
+            isRealtimeConfigured={isRealtimeConfigured}
+            onOpenChat={onOpenChat}
+            profile={profile}
+          />
         )}
       </div>
     </Draggable>

@@ -1,8 +1,27 @@
+import type { MsnContact, MsnProfile } from "../../types";
+
 type MainWindowLoggedProps = {
-  toggleChatWindow: () => void;
+  contacts: MsnContact[];
+  isRealtimeConfigured: boolean;
+  onOpenChat: (contact: MsnContact) => void;
+  profile: MsnProfile;
 };
 
-export function MainWindowLogged({ toggleChatWindow }: MainWindowLoggedProps) {
+const statusIcon = {
+  away: "/msn/images/user/user-away.png",
+  offline: "/msn/images/user/user-invisible.png",
+  online: "/msn/images/user/user-online.png",
+};
+
+export function MainWindowLogged({
+  contacts,
+  isRealtimeConfigured,
+  onOpenChat,
+  profile,
+}: MainWindowLoggedProps) {
+  const onlineContacts = contacts.filter((contact) => contact.status === "online" || contact.status === "away");
+  const offlineContacts = contacts.filter((contact) => contact.status === "offline");
+
   return (
     <div>
       <div>
@@ -12,8 +31,8 @@ export function MainWindowLogged({ toggleChatWindow }: MainWindowLoggedProps) {
               <img src="/msn/images/user.png" alt="User profile" width="65" className="border border-2 border-white" />
             </div>
             <div className="col d-flex flex-column ps-2">
-              <span className="fw-bold">belenyb</span>
-              <span>&lt;Enter a personal message&gt;</span>
+              <span className="fw-bold">{profile.nick}</span>
+              <span>{profile.isAdmin ? "Criador do projeto" : "<Enter a personal message>"}</span>
               <div className="d-flex gap-3 pt-1 justify-content-center">
                 <img src="/msn/images/msn-icons/mail.png" alt="Icon" width="20" />
                 <img src="/msn/images/msn-icons/folder.png" alt="Icon" width="20" />
@@ -40,47 +59,41 @@ export function MainWindowLogged({ toggleChatWindow }: MainWindowLoggedProps) {
             <hr className="mt-2 mb-1" />
             <div className="d-flex gap-2">
               <img src="/msn/images/msn-icons/info.png" alt="Info icon" width={16} />
-              <span className="text-primary text-decoration-underline" role="button">You have 35 pending requests</span>
+              <span className="text-primary text-decoration-underline" role="button">
+                {isRealtimeConfigured ? "You are connected to Anos 2000 MSN" : "Modo local: configure Supabase para conversar em tempo real"}
+              </span>
             </div>
             <hr className="my-1" />
             <details open>
-              <summary className="fw-bold">Online (5)</summary>
-              <div className="d-flex gap-1" role="button" onDoubleClick={toggleChatWindow}>
-                <img src="/msn/images/user/user-online.png" alt="User icon" width={16} />
-                <span>Gemini - <span className="text-secondary">Ask me anything</span></span>
-              </div>
-              <div className="d-flex gap-1" role="button">
-                <img src="/msn/images/user/user-online.png" alt="User icon" width={16} />
-                <span>Oº°‘¨PanchitO¨‘°ºO - <span className="text-secondary">Music for life <img src="/msn/images/emojis/29.png" alt="Music icon" width={10} /></span></span>
-              </div>
-              <div className="d-flex gap-1" role="button">
-                <img src="/msn/images/user/user-away.png" alt="User icon" width={16} />
-                <span>July07 - <span className="text-secondary">AFK</span></span>
-              </div>
-              <div className="d-flex gap-1" role="button">
-                <img src="/msn/images/user/user-online.png" alt="User icon" width={16} />
-                <span>Marina - <span className="text-secondary">ι ∂σи-т ωαιииα μιѕѕ α тнιиg</span></span>
-              </div>
-              <div className="d-flex gap-1" role="button">
-                <img src="/msn/images/user/user-online.png" alt="User icon" width={16} />
-                <span>MKZ_00 - <span className="text-secondary">Boreeeed <img src="/msn/images/emojis/22.png" alt="Music icon" width={10} /></span></span>
-              </div>
-              <div className="d-flex gap-1" role="button">
-                <img src="/msn/images/user/user-blocked.png" alt="User icon" width={16} />
-                <span>Ernesto <span className="text-secondary" /></span>
-              </div>
+              <summary className="fw-bold">Online ({onlineContacts.length})</summary>
+              {onlineContacts.map((contact) => (
+                <div
+                  className="d-flex gap-1"
+                  key={contact.id}
+                  onClick={() => onOpenChat(contact)}
+                  onDoubleClick={() => onOpenChat(contact)}
+                  role="button"
+                >
+                  <img src={statusIcon[contact.status]} alt="User icon" width={16} />
+                  <span>{contact.nick} - <span className="text-secondary">{contact.message}</span></span>
+                </div>
+              ))}
             </details>
             <hr className="my-1" />
             <details open>
-              <summary className="fw-bold">Offline (2)</summary>
-              <div className="d-flex gap-1" role="button">
-                <img src="/msn/images/user/user-invisible.png" alt="User icon" width={16} />
-                <span>Max - <span className="text-secondary">Too cool for school</span></span>
-              </div>
-              <div className="d-flex gap-1" role="button">
-                <img src="/msn/images/user/user-invisible.png" alt="User icon" width={16} />
-                <span>(¯`·._.·[007-ban]·._.·´¯) - <span className="text-secondary">No worries</span></span>
-              </div>
+              <summary className="fw-bold">Offline ({offlineContacts.length})</summary>
+              {offlineContacts.map((contact) => (
+                <div
+                  className="d-flex gap-1"
+                  key={contact.id}
+                  onClick={() => onOpenChat(contact)}
+                  onDoubleClick={() => onOpenChat(contact)}
+                  role="button"
+                >
+                  <img src={statusIcon[contact.status]} alt="User icon" width={16} />
+                  <span>{contact.nick} - <span className="text-secondary">{contact.message}</span></span>
+                </div>
+              ))}
             </details>
           </div>
         </div>

@@ -31,6 +31,7 @@ export type Database = {
           created_at?: string;
           last_seen_at?: string | null;
         };
+        Relationships: [];
       };
       chat_messages: {
         Row: {
@@ -60,6 +61,20 @@ export type Database = {
           body?: string;
           created_at?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_sender_id_fkey";
+            columns: ["sender_id"];
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "chat_messages_recipient_id_fkey";
+            columns: ["recipient_id"];
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
       };
     };
     Views: Record<string, never>;

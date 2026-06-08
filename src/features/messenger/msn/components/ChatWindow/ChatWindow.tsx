@@ -2,35 +2,29 @@
 
 import { useEffect, useRef, useState } from "react";
 import Draggable from "react-draggable";
-
-type ChatPart =
-  | {
-    text: string;
-    type: "text";
-  }
-  | {
-    alt: string;
-    src: string;
-    type: "emoji";
-  };
-
-type ChatMessage = {
-  parts: ChatPart[];
-  role: "model" | "user";
-};
+import type { MsnChatPart, MsnContact, MsnMessage, MsnProfile } from "../../types";
 
 type ChatWindowProps = {
+  contact: MsnContact;
+  currentProfile: MsnProfile;
+  messages: MsnMessage[];
   onClose: () => void;
   onMinimize: () => void;
+  onSendMessage: (parts: MsnChatPart[]) => void;
 };
 
-export function ChatWindow({ onClose, onMinimize }: ChatWindowProps) {
+export function ChatWindow({
+  contact,
+  currentProfile,
+  messages,
+  onClose,
+  onMinimize,
+  onSendMessage,
+}: ChatWindowProps) {
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const chatWindowRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<HTMLDivElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
 
   function setChatWindowNode(node: HTMLDivElement | null) {
@@ -46,7 +40,7 @@ export function ChatWindow({ onClose, onMinimize }: ChatWindowProps) {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatHistory]);
+  }, [messages]);
 
   function playTiltSound() {
     const audio = new Audio("/msn/sounds/tilt.mp3");
@@ -71,7 +65,7 @@ export function ChatWindow({ onClose, onMinimize }: ChatWindowProps) {
 
   function readEditorParts() {
     const editor = editorRef.current;
-    const parts: ChatPart[] = [];
+    const parts: MsnChatPart[] = [];
 
     function collect(node: ChildNode) {
       if (node.nodeType === Node.TEXT_NODE) {
@@ -107,7 +101,7 @@ export function ChatWindow({ onClose, onMinimize }: ChatWindowProps) {
     return parts;
   }
 
-  function renderMessageParts(parts: ChatPart[]) {
+  function renderMessageParts(parts: MsnChatPart[]) {
     return parts.map((part, index) => {
       if (part.type === "text") {
         return <span key={index}>{part.text}</span>;
@@ -128,27 +122,12 @@ export function ChatWindow({ onClose, onMinimize }: ChatWindowProps) {
     const parts = readEditorParts();
     const hasContent = parts.some((part) => part.type === "emoji" || part.text.trim());
 
-    if (!hasContent || isLoading) {
+    if (!hasContent) {
       return;
     }
 
-    setIsLoading(true);
     clearEditor();
-    setChatHistory((current) => [
-      ...current,
-      { role: "user", parts },
-    ]);
-
-    window.setTimeout(() => {
-      setChatHistory((current) => [
-        ...current,
-        {
-          role: "model",
-          parts: [{ text: "Mensagem recebida. Em breve este chat sera conectado ao Anos 2000 em tempo real.", type: "text" }],
-        },
-      ]);
-      setIsLoading(false);
-    }, 700);
+    onSendMessage(parts);
   }
 
   function insertEmoji(emojiNumber: number) {
@@ -193,8 +172,8 @@ export function ChatWindow({ onClose, onMinimize }: ChatWindowProps) {
           <div className="d-flex align-items-center">
             <img src="/msn/images/user/user-online.png" alt="Online user icon" width="35" className="p-1" />
             <div className="d-grid">
-              <span className="ps-1 fw-bold lh-1">Gemini</span>
-              <span className="ps-1 lh-1">Ask me anything</span>
+              <span className="ps-1 fw-bold lh-1">{contact.nick}</span>
+              <span className="ps-1 lh-1">{contact.message}</span>
             </div>
           </div>
           <div className="d-flex gap-2">
@@ -221,14 +200,18 @@ export function ChatWindow({ onClose, onMinimize }: ChatWindowProps) {
         <div className="row g-0 mx-2 messages-block-row">
           <div className="col col-md-9">
             <div className="me-2 messages-block white-box d-flex flex-column pt-1 overflow-auto">
-              {chatHistory.map((chat, index) => (
-                <div key={`${chat.role}-${index}`} className="mb-2 px-2">
-                  <p className="m-0 fw-bold message-user">{chat.role === "model" ? "Gemini says: " : "belenyb says: "}</p>
-                  <div className={`m-0 message ${chat.role}`}>
-                    <p className="mb-0">{renderMessageParts(chat.parts)}</p>
+              {messages.map((chat) => {
+                const isMine = chat.senderId === currentProfile.id;
+
+                return (
+                  <div key={chat.id} className="mb-2 px-2">
+                    <p className="m-0 fw-bold message-user">{isMine ? `${currentProfile.nick} says: ` : `${chat.senderNick} says: `}</p>
+                    <div className={`m-0 message ${isMine ? "user" : "bot"}`}>
+                      <p className="mb-0">{renderMessageParts(chat.parts)}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               <div ref={messagesEndRef} />
             </div>
             <div className="d-flex justify-content-center mb-0 mb-lg-2 separator">
@@ -274,13 +257,13 @@ export function ChatWindow({ onClose, onMinimize }: ChatWindowProps) {
                 </div>
               </div>
               <div className="chat-box-toolbar">
-                <p className="is-writing-label m-0">{isLoading ? "Gemini is writing..." : "\u200e "}</p>
+                <p className="is-writing-label m-0">{"\u200e "}</p>
               </div>
             </div>
           </div>
           <div className="col-auto d-flex flex-column justify-content-between">
             <div className="p-lg-2 p-1 bg-white">
-              <img src="/msn/images/gemini.png" alt="User profile" width="100" className="user-profile-pic border border-2 border-white" />
+              <img src={contact.avatar} alt="User profile" width="100" className="user-profile-pic border border-2 border-white" />
             </div>
             <div className="p-lg-2 p-1 bg-white">
               <img src="/msn/images/user.png" alt="User profile" width="100" className="user-profile-pic border border-2 border-white" />

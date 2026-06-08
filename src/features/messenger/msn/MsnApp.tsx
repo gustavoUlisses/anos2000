@@ -3,31 +3,40 @@
 import { useState } from "react";
 import { ChatWindow } from "./components/ChatWindow/ChatWindow";
 import { MainWindow } from "./components/MainWindow/MainWindow";
+import { useMsnRealtime } from "./useMsnRealtime";
+import type { MsnContact } from "./types";
 
 type MsnAppProps = {
   onClose: () => void;
 };
 
 export function MsnApp({ onClose }: MsnAppProps) {
+  const messenger = useMsnRealtime();
+  const [activeContact, setActiveContact] = useState<MsnContact | null>(null);
   const [showLoginWindow, setShowLoginWindow] = useState(true);
-  const [showChatWindow, setShowChatWindow] = useState(false);
   const [isLoginMinimized, setIsLoginMinimized] = useState(false);
   const [isChatMinimized, setIsChatMinimized] = useState(false);
 
   function closeLoginWindow() {
     setShowLoginWindow(false);
 
-    if (!showChatWindow) {
+    if (!activeContact) {
       onClose();
     }
   }
 
   function closeChatWindow() {
-    setShowChatWindow(false);
+    setActiveContact(null);
 
     if (!showLoginWindow) {
       onClose();
     }
+  }
+
+  async function openChat(contact: MsnContact) {
+    setActiveContact(contact);
+    setIsChatMinimized(false);
+    await messenger.loadConversation(contact.id);
   }
 
   return (
@@ -35,23 +44,28 @@ export function MsnApp({ onClose }: MsnAppProps) {
       {showLoginWindow && !isLoginMinimized ? (
         <div className="msn-window-slot">
           <MainWindow
+            contacts={messenger.contacts}
+            isRealtimeConfigured={messenger.isRealtimeConfigured}
             onClose={closeLoginWindow}
+            onLogin={messenger.login}
             onMinimize={() => setIsLoginMinimized(true)}
-            toggleChatWindow={() => {
-              setIsChatMinimized(false);
-              setShowChatWindow(true);
-            }}
+            onOpenChat={openChat}
+            profile={messenger.profile}
           />
         </div>
       ) : (
         <div style={{ width: "300px", height: "550px" }} />
       )}
 
-      {showChatWindow && !isChatMinimized ? (
+      {activeContact && !isChatMinimized && messenger.profile ? (
         <div className="msn-window-slot">
           <ChatWindow
+            contact={activeContact}
+            currentProfile={messenger.profile}
+            messages={messenger.getConversation(activeContact.id)}
             onClose={closeChatWindow}
             onMinimize={() => setIsChatMinimized(true)}
+            onSendMessage={(parts) => messenger.sendMessage(activeContact, parts)}
           />
         </div>
       ) : (
@@ -67,7 +81,7 @@ export function MsnApp({ onClose }: MsnAppProps) {
           )}
           {isChatMinimized && (
             <button type="button" onClick={() => setIsChatMinimized(false)}>
-              Gemini
+              {activeContact?.nick ?? "Conversa"}
             </button>
           )}
         </div>

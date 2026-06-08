@@ -2,11 +2,13 @@ create extension if not exists "pgcrypto";
 
 create table if not exists public.profiles (
   id uuid primary key default gen_random_uuid(),
-  nick text not null unique,
+  nick text not null,
   is_admin boolean not null default false,
   created_at timestamptz not null default now(),
   last_seen_at timestamptz
 );
+
+alter table public.profiles drop constraint if exists profiles_nick_key;
 
 create table if not exists public.chat_messages (
   id uuid primary key default gen_random_uuid(),
@@ -29,6 +31,12 @@ using (true);
 create policy "anonymous users can create non-admin profiles"
 on public.profiles
 for insert
+with check (is_admin = false and lower(nick) <> 'gusdev');
+
+create policy "anonymous users can update their last seen profile data"
+on public.profiles
+for update
+using (is_admin = false and lower(nick) <> 'gusdev')
 with check (is_admin = false and lower(nick) <> 'gusdev');
 
 create policy "messages are readable for realtime MVP"

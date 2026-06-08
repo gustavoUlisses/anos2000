@@ -1,8 +1,8 @@
 type MainWindowNotLoggedProps = {
-  handleClick: () => void;
+  handleLogin: (nick: string) => void;
 };
 
-export function MainWindowNotLogged({ handleClick }: MainWindowNotLoggedProps) {
+export function MainWindowNotLogged({ handleLogin }: MainWindowNotLoggedProps) {
   return (
     <>
       <div className="d-flex flex-column justify-content-between">
@@ -10,10 +10,17 @@ export function MainWindowNotLogged({ handleClick }: MainWindowNotLoggedProps) {
           <div className="d-flex justify-content-center my-5">
             <img src="/msn/images/user.png" alt="User" className="border border-2 border-white" width="130" />
           </div>
-          <form className="px-4">
+          <form
+            className="px-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const formData = new FormData(event.currentTarget);
+              handleLogin(String(formData.get("nick") ?? ""));
+            }}
+          >
             <div className="mb-2 d-flex flex-column">
               <label htmlFor="emailInput">E-mail address:</label>
-              <input type="email" className="border border-secondary" id="emailInput" placeholder="" />
+              <input type="text" className="border border-secondary" id="emailInput" name="nick" placeholder="" />
             </div>
             <div className="mb-2 d-flex flex-column">
               <label htmlFor="passwordInput">Password:</label>
@@ -31,8 +38,8 @@ export function MainWindowNotLogged({ handleClick }: MainWindowNotLoggedProps) {
               <input type="checkbox" name="rememberMeInput" id="rememberMeInput" />
               <label htmlFor="rememberMeInput">Remember me</label>
             </div>
-            <div className="text-center" onClick={handleClick}>
-              <button className="my-3 px-3 text-center" type="button">Sign in</button>
+            <div className="text-center">
+              <button className="my-3 px-3 text-center" type="submit">Sign in</button>
             </div>
           </form>
         </div>
