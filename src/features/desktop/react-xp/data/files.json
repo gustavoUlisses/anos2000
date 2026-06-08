@@ -15,20 +15,6 @@
             }
         ],
         [
-            "gitHub",
-            {
-                "top": 145,
-                "left": 5
-            }
-        ],
-        [
-            "kofi",
-            {
-                "top": 210,
-                "left": 5
-            }
-        ],
-        [
             "recycleBin",
             {
                 "bottom": 5,
