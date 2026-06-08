@@ -11,7 +11,7 @@
 }
 
 .login-window.is-logged-in {
-  height: auto;
+  height: 550px;
 }
 
 .login-window span {
@@ -45,6 +45,8 @@
 .logged-window-body {
   box-shadow: 2px 2px 4px 0px #b9b9b9;
   border: 1px solid #b9b9b9;
+  flex: 1;
+  overflow: hidden;
 }
 
 input[type="search"] {
@@ -70,6 +72,20 @@ details {
   display: flex;
   flex-direction: column;
   gap: 5px;
+  height: 100%;
+}
+
+.logged-window-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.logged-window-body .toolbar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .personal-message-button {

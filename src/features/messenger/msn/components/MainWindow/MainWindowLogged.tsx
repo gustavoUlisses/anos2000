@@ -39,7 +39,7 @@ export function MainWindowLogged({
 
   return (
     <div className="logged-window-content">
-      <div>
+      <div className="logged-window-main">
         <div className="logged-window-header p-1 my-2 position-relative">
           <div className="row g-0 align-items-center">
             <div className="col-auto">
