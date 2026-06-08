@@ -24,7 +24,7 @@ export function MainWindowLogged({
   onPersonalMessageChange,
   profile,
 }: MainWindowLoggedProps) {
-  const personalMessage = profile.personalMessage || (profile.isAdmin ? "Criador do projeto" : "<Enter a personal message>");
+  const personalMessage = profile.personalMessage.trim() || (profile.isAdmin ? "Criador do projeto" : "");
   const [draftMessage, setDraftMessage] = useState(personalMessage);
   const [isEditingMessage, setIsEditingMessage] = useState(false);
   const onlineContacts = contacts.filter((contact) => contact.status === "online" || contact.status === "away");
@@ -74,10 +74,16 @@ export function MainWindowLogged({
                       setIsEditingMessage(false);
                     }
                   }}
+                  placeholder="<Enter a personal message>"
                   value={draftMessage}
                 />
               ) : (
-                <button className="personal-message-button" onClick={() => setIsEditingMessage(true)} type="button">
+                <button
+                  aria-label="Definir mensagem pessoal"
+                  className="personal-message-button"
+                  onClick={() => setIsEditingMessage(true)}
+                  type="button"
+                >
                   {personalMessage}
                 </button>
               )}
