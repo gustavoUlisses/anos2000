@@ -1,8 +1,30 @@
+import { useState } from "react";
+
 type MainWindowNotLoggedProps = {
   handleLogin: (nick: string) => void;
 };
 
 export function MainWindowNotLogged({ handleLogin }: MainWindowNotLoggedProps) {
+  const [error, setError] = useState("");
+
+  function submitLogin(form: HTMLFormElement) {
+    const formData = new FormData(form);
+    const nick = String(formData.get("nick") ?? "").trim().replace(/\s+/g, " ");
+
+    if (!nick) {
+      setError("Digite um nick para entrar.");
+      return;
+    }
+
+    if (nick.toLowerCase() === "gusdev") {
+      setError("Esse nick esta reservado.");
+      return;
+    }
+
+    setError("");
+    handleLogin(nick);
+  }
+
   return (
     <>
       <div className="d-flex flex-column justify-content-between">
@@ -14,14 +36,23 @@ export function MainWindowNotLogged({ handleLogin }: MainWindowNotLoggedProps) {
             className="px-4"
             onSubmit={(event) => {
               event.preventDefault();
-              const formData = new FormData(event.currentTarget);
-              handleLogin(String(formData.get("nick") ?? ""));
+              submitLogin(event.currentTarget);
             }}
           >
             <div className="mb-2 d-flex flex-column">
-              <label htmlFor="emailInput">E-mail address:</label>
-              <input type="text" className="border border-secondary" id="emailInput" name="nick" placeholder="" />
+              <label htmlFor="nickInput">Nickname:</label>
+              <input
+                autoComplete="nickname"
+                className="border border-secondary"
+                id="nickInput"
+                maxLength={24}
+                name="nick"
+                placeholder="Digite seu nick"
+                required
+                type="text"
+              />
             </div>
+            {error && <p className="login-error mb-2">{error}</p>}
             <div className="mb-2 d-flex flex-column">
               <label htmlFor="passwordInput">Password:</label>
               <input type="password" className="border border-secondary" id="passwordInput" placeholder="" autoComplete="on" />
@@ -46,7 +77,7 @@ export function MainWindowNotLogged({ handleLogin }: MainWindowNotLoggedProps) {
         <div className="links px-4 d-flex flex-column text-primary">
           <span role="button">Forgot your password?</span>
           <span role="button">Service status</span>
-          <span role="button">Sign up htmlFor a Windows Live ID</span>
+          <span role="button">Choose your own nickname to enter</span>
         </div>
       </div>
       <div className="position-absolute bottom-0 py-1">

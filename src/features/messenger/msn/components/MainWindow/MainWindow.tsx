@@ -32,10 +32,11 @@ export function MainWindow({
 
   async function login(nick: string) {
     setIsLoading(true);
-    await onLogin(nick);
-    window.setTimeout(() => {
+    try {
+      await onLogin(nick);
+    } finally {
       setIsLoading(false);
-    }, 700);
+    }
   }
 
   return (

@@ -4,7 +4,10 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
 const sessionSchema = z.object({
   clientId: z.string().uuid(),
-  nick: z.string().trim().min(1).max(24),
+  nick: z.string().trim().min(1).max(24).refine(
+    (nick) => nick.toLowerCase() !== "gusdev",
+    "Reserved nick.",
+  ),
 });
 
 export async function POST(request: Request) {
@@ -19,7 +22,7 @@ export async function POST(request: Request) {
     const nick = parsedBody.data.nick;
     const profile = {
       id: parsedBody.data.clientId,
-      is_admin: nick.toLowerCase() === "gusdev",
+      is_admin: false,
       last_seen_at: new Date().toISOString(),
       nick,
     };

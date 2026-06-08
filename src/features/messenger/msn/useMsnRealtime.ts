@@ -39,7 +39,15 @@ function normalizeNick(rawNick: string) {
   const nickFromEmail = rawNick.includes("@") ? rawNick.split("@")[0] : rawNick;
   const cleanedNick = nickFromEmail.trim().replace(/\s+/g, " ").slice(0, 24);
 
-  return cleanedNick || "Visitante";
+  if (!cleanedNick) {
+    throw new Error("Nick is required.");
+  }
+
+  if (cleanedNick.toLowerCase() === "gusdev") {
+    throw new Error("Reserved nick.");
+  }
+
+  return cleanedNick;
 }
 
 function getStoredProfile() {
@@ -50,7 +58,14 @@ function getStoredProfile() {
       return null;
     }
 
-    return JSON.parse(storedProfile) as MsnProfile;
+    const profile = JSON.parse(storedProfile) as MsnProfile;
+
+    if (profile.nick?.toLowerCase() === "gusdev") {
+      localStorage.removeItem(profileStorageKey);
+      return null;
+    }
+
+    return profile;
   } catch {
     return null;
   }
@@ -116,7 +131,7 @@ function dedupeMessages(messages: MsnMessage[]) {
 async function createSessionProfile(clientId: string, nick: string) {
   const fallbackProfile: MsnProfile = {
     id: clientId,
-    isAdmin: nick.toLowerCase() === "gusdev",
+    isAdmin: false,
     lastSeenAt: new Date().toISOString(),
     nick,
   };
