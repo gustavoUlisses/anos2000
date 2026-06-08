@@ -1,5 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+:host {
+  color: #111;
+  color-scheme: light;
+  font-family: "Roboto", sans-serif;
+  font-style: normal;
+}
+
 .msn-app {
   align-items: center;
+  color: #111;
   display: flex;
   font-family: "Roboto", Arial, sans-serif;
   font-style: normal;
@@ -16,6 +26,40 @@
 
 .msn-app input {
   outline: none;
+}
+
+.msn-app input,
+.msn-app select,
+.msn-app textarea {
+  background-color: #fff;
+  color: #111;
+}
+
+.msn-app .bg-transparent {
+  background-color: transparent !important;
+}
+
+.msn-app button {
+  background: linear-gradient(0deg, #D4E8F1 0%, #E1E8EE 75%);
+  border: 1px solid #b1b1b16b;
+  box-shadow: inset 0px -1px #8d8d8d;
+  color: #111;
+  font-size: 12px;
+}
+
+.msn-app .windows-app-icons > div:hover {
+  background-color: #dddddd5e;
+  border-radius: 6px;
+  box-shadow: 1px 1px 3px 0px #cecece82;
+  cursor: pointer;
+}
+
+.msn-app .windows-app-icons span {
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-weight: normal;
+  text-shadow: 1px 2px 1.5px rgba(0, 0, 0, 0.887);
+  user-select: none;
 }
 
 .msn-window-slot {
@@ -38,4 +82,65 @@
 .msn-minimized button {
   min-width: 150px;
   text-align: left;
+}
+
+@media (max-width: 768px) {
+  .chat-window {
+    margin-inline: 10px;
+  }
+
+  .user-profile-pic {
+    width: 65px;
+  }
+
+  .login-window,
+  .search-button {
+    display: none;
+  }
+
+  .send-button {
+    height: 25px;
+  }
+
+  .send-button::after {
+    content: "\21B5";
+    font-size: 12px;
+  }
+
+  .chat-buttons {
+    align-items: center;
+  }
+
+  .separator > span {
+    line-height: 10px;
+    margin-bottom: 5px;
+  }
+
+  pre,
+  code {
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  code {
+    display: block;
+    font-size: calc(0.8em + 0.2vw);
+  }
+}
+
+@media (max-width: 375px) {
+  .messages-block-row .col {
+    width: 75%;
+  }
+
+  .messages-block-row .col-auto {
+    width: 20%;
+  }
+
+  .user-profile-pic {
+    max-width: 65px;
+    width: 100%;
+  }
 }
