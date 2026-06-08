@@ -5,7 +5,7 @@ import { ChatWindow } from "./components/ChatWindow/ChatWindow";
 import { MainWindow } from "./components/MainWindow/MainWindow";
 import { useMsnRealtime } from "./useMsnRealtime";
 import type { MessengerTaskbarItem } from "@/features/desktop/react-xp/context/types";
-import type { MsnContact, MsnMessage } from "./types";
+import type { MsnContact, MsnMessage, MsnNudgeEvent } from "./types";
 
 type MsnAppProps = {
   onClose: () => void;
@@ -16,6 +16,7 @@ type OpenChat = {
   attention: boolean;
   contact: MsnContact;
   minimized: boolean;
+  nudgeSignal: number;
 };
 
 const msnMainTaskbarId = "msn-main";
@@ -27,6 +28,7 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
   const [showLoginWindow, setShowLoginWindow] = useState(true);
   const [isLoginMinimized, setIsLoginMinimized] = useState(false);
   const handledIncomingMessageIds = useRef<Set<string>>(new Set());
+  const handledIncomingNudgeIds = useRef<Set<string>>(new Set());
   const offlineNotifiedContactIds = useRef<Set<string>>(new Set());
   const mountedAt = useRef(0);
   const addSystemMessage = messenger.addSystemMessage;
@@ -68,7 +70,7 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
         ));
       }
 
-      return [...current, { attention: false, contact, minimized: false }];
+      return [...current, { attention: false, contact, minimized: false, nudgeSignal: 0 }];
     });
     await messenger.loadConversation(contact.id);
   }
@@ -94,6 +96,7 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
     setIsLoginMinimized(false);
     setShowLoginWindow(true);
     handledIncomingMessageIds.current.clear();
+    handledIncomingNudgeIds.current.clear();
     offlineNotifiedContactIds.current.clear();
     void messenger.logout();
   }
@@ -111,6 +114,15 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
       id: message.senderId,
       message: "",
       nick: message.senderNick,
+      status: "online",
+    };
+  }, [contacts]);
+
+  const contactFromNudge = useCallback((nudge: MsnNudgeEvent): MsnContact => {
+    const existingContact = contacts.find((contact) => contact.id === nudge.senderId);
+
+    return existingContact ?? {
+      ...nudge.sender,
       status: "online",
     };
   }, [contacts]);
@@ -158,12 +170,63 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
           attention: true,
           contact: incomingContact,
           minimized: true,
+          nudgeSignal: 0,
         });
       }
 
       return nextChats;
     });
   }, [contactFromIncomingMessage, messenger.messages, profile]);
+
+  useEffect(() => {
+    if (!profile) {
+      handledIncomingNudgeIds.current.clear();
+      return;
+    }
+
+    const incomingNudges = messenger.nudges.filter((nudge) => (
+      nudge.senderId !== profile.id &&
+      nudge.recipientId === profile.id &&
+      new Date(nudge.createdAt).getTime() >= mountedAt.current &&
+      !handledIncomingNudgeIds.current.has(nudge.id)
+    ));
+
+    if (!incomingNudges.length) {
+      return;
+    }
+
+    incomingNudges.forEach((nudge) => handledIncomingNudgeIds.current.add(nudge.id));
+
+    setOpenChats((current) => {
+      const nextChats = [...current];
+
+      for (const nudge of incomingNudges) {
+        const incomingContact = contactFromNudge(nudge);
+        const existingIndex = nextChats.findIndex((chat) => chat.contact.id === incomingContact.id);
+
+        if (existingIndex >= 0) {
+          const existingChat = nextChats[existingIndex];
+          nextChats[existingIndex] = {
+            ...existingChat,
+            attention: false,
+            contact: incomingContact,
+            minimized: false,
+            nudgeSignal: existingChat.nudgeSignal + 1,
+          };
+          continue;
+        }
+
+        nextChats.push({
+          attention: false,
+          contact: incomingContact,
+          minimized: false,
+          nudgeSignal: 1,
+        });
+      }
+
+      return nextChats;
+    });
+  }, [contactFromNudge, messenger.nudges, profile]);
 
   useEffect(() => {
     if (!profile || !isRealtimeConfigured) {
@@ -301,8 +364,16 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
                 currentProfile={currentProfile}
                 isContactOnline={contactOnline}
                 messages={messenger.getConversation(chat.contact.id)}
+                nudgeSignal={chat.nudgeSignal}
                 onClose={() => closeChatWindow(chat.contact.id)}
                 onMinimize={() => minimizeChat(chat.contact.id)}
+                onSendNudge={() => {
+                  if (!contactOnline) {
+                    return false;
+                  }
+
+                  return messenger.sendNudge(resolvedContact);
+                }}
                 onSendMessage={(parts) => {
                   if (!contactOnline) {
                     return;

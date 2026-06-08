@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Draggable from "react-draggable";
 import type { MsnChatPart, MsnContact, MsnMessage, MsnProfile } from "../../types";
 
@@ -9,8 +9,10 @@ type ChatWindowProps = {
   currentProfile: MsnProfile;
   isContactOnline: boolean;
   messages: MsnMessage[];
+  nudgeSignal: number;
   onClose: () => void;
   onMinimize: () => void;
+  onSendNudge: () => boolean;
   onSendMessage: (parts: MsnChatPart[]) => void;
 };
 
@@ -19,13 +21,16 @@ export function ChatWindow({
   currentProfile,
   isContactOnline,
   messages,
+  nudgeSignal,
   onClose,
   onMinimize,
+  onSendNudge,
   onSendMessage,
 }: ChatWindowProps) {
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const chatWindowRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<HTMLDivElement | null>(null);
+  const lastLocalNudgeAt = useRef(0);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
   const contactStatusIcon = contact.status === "offline"
@@ -47,7 +52,7 @@ export function ChatWindow({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  function playTiltSound() {
+  const playTiltSound = useCallback(() => {
     const audio = new Audio("/msn/sounds/tilt.mp3");
     const chatWindow = chatWindowRef.current;
 
@@ -58,6 +63,33 @@ export function ChatWindow({
     }
 
     void audio.play().catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    if (!nudgeSignal) {
+      return;
+    }
+
+    playTiltSound();
+  }, [nudgeSignal, playTiltSound]);
+
+  function sendNudge() {
+    if (!isContactOnline) {
+      return;
+    }
+
+    const now = Date.now();
+
+    if (now - lastLocalNudgeAt.current < 5_000) {
+      return;
+    }
+
+    if (!onSendNudge()) {
+      return;
+    }
+
+    lastLocalNudgeAt.current = now;
+    playTiltSound();
   }
 
   function clearEditor() {
@@ -249,7 +281,7 @@ export function ChatWindow({
                       {emojiList}
                     </ul>
                   </div>
-                  <img className="ps-2" src="/msn/images/tilt.png" alt="Tilt icon" role="button" onClick={playTiltSound} />
+                  <img className="ps-2" src="/msn/images/tilt.png" alt="Tilt icon" role="button" onClick={sendNudge} />
                 </div>
                 <div className="d-flex align-items-center gap-2">
                   <img src="/msn/images/bg.png" alt="icons" role="button" width="18" />

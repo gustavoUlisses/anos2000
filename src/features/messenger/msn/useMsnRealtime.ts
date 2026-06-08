@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
-import type { MsnChatPart, MsnContact, MsnMessage, MsnProfile } from "./types";
+import type { MsnChatPart, MsnContact, MsnMessage, MsnNudgeEvent, MsnProfile } from "./types";
 
 const clientIdStorageKey = "anos2000:msn:client-id";
 const profileStorageKey = "anos2000:msn:profile";
 const gusDevId = "gusdev-offline";
+const nudgeSendCooldownMs = 5_000;
+const nudgeReceiveCooldownMs = 2_000;
 
 type PresencePayload = MsnProfile;
 type PresenceStatusPayload = {
@@ -129,6 +131,38 @@ function isMsnMessage(value: unknown): value is MsnMessage {
     typeof candidate.createdAt === "string" &&
     Array.isArray(candidate.parts) &&
     candidate.parts.every(isChatPart)
+  );
+}
+
+function isMsnContact(value: unknown): value is MsnContact {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<MsnContact>;
+
+  return (
+    typeof candidate.avatar === "string" &&
+    typeof candidate.id === "string" &&
+    typeof candidate.message === "string" &&
+    typeof candidate.nick === "string" &&
+    (candidate.status === "online" || candidate.status === "away" || candidate.status === "offline")
+  );
+}
+
+function isMsnNudgeEvent(value: unknown): value is MsnNudgeEvent {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<MsnNudgeEvent>;
+
+  return (
+    typeof candidate.createdAt === "string" &&
+    typeof candidate.id === "string" &&
+    typeof candidate.recipientId === "string" &&
+    typeof candidate.senderId === "string" &&
+    isMsnContact(candidate.sender)
   );
 }
 
@@ -261,7 +295,10 @@ async function announceOffline(channel: RealtimeChannel | null, profile: MsnProf
 export function useMsnRealtime() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const lastNudgeReceivedAt = useRef<Map<string, number>>(new Map());
+  const lastNudgeSentAt = useRef<Map<string, number>>(new Map());
   const [messages, setMessages] = useState<MsnMessage[]>([]);
+  const [nudges, setNudges] = useState<MsnNudgeEvent[]>([]);
   const [onlineProfiles, setOnlineProfiles] = useState<MsnProfile[]>([]);
   const [profile, setProfile] = useState<MsnProfile | null>(() => {
     if (typeof window === "undefined") {
@@ -305,6 +342,25 @@ export function useMsnRealtime() {
         }
 
         setMessages((current) => dedupeMessages([...current, payload]));
+      })
+      .on("broadcast", { event: "nudge" }, ({ payload }: { payload: unknown }) => {
+        if (!isMsnNudgeEvent(payload)) {
+          return;
+        }
+
+        if (payload.senderId === profile.id || payload.recipientId !== profile.id) {
+          return;
+        }
+
+        const now = Date.now();
+        const lastNudgeAt = lastNudgeReceivedAt.current.get(payload.senderId) ?? 0;
+
+        if (now - lastNudgeAt < nudgeReceiveCooldownMs) {
+          return;
+        }
+
+        lastNudgeReceivedAt.current.set(payload.senderId, now);
+        setNudges((current) => [...current.slice(-20), payload]);
       })
       .on("broadcast", { event: "presence-status" }, ({ payload }: { payload: unknown }) => {
         if (!isPresenceStatusPayload(payload) || payload.profile.id === profile.id) {
@@ -369,6 +425,7 @@ export function useMsnRealtime() {
 
     clearStoredSession();
     setMessages([]);
+    setNudges([]);
     setOnlineProfiles([]);
     setProfile(null);
   }, [profile, supabase]);
@@ -436,6 +493,44 @@ export function useMsnRealtime() {
     }
 
     await persistMessage(message);
+  }, [profile]);
+
+  const sendNudge = useCallback((contact: MsnContact) => {
+    if (!profile || !channelRef.current) {
+      return false;
+    }
+
+    const now = Date.now();
+    const lastNudgeAt = lastNudgeSentAt.current.get(contact.id) ?? 0;
+
+    if (now - lastNudgeAt < nudgeSendCooldownMs) {
+      return false;
+    }
+
+    lastNudgeSentAt.current.set(contact.id, now);
+
+    const nudge: MsnNudgeEvent = {
+      createdAt: new Date().toISOString(),
+      id: createId(),
+      recipientId: contact.id,
+      sender: {
+        avatar: "/msn/images/user.png",
+        id: profile.id,
+        isAdmin: profile.isAdmin,
+        message: profile.personalMessage || (profile.isAdmin ? "Criador do projeto" : ""),
+        nick: profile.nick,
+        status: "online",
+      },
+      senderId: profile.id,
+    };
+
+    void channelRef.current.send({
+      event: "nudge",
+      payload: nudge,
+      type: "broadcast",
+    }).catch(() => undefined);
+
+    return true;
   }, [profile]);
 
   const addSystemMessage = useCallback((contact: MsnContact, text: string) => {
@@ -514,9 +609,11 @@ export function useMsnRealtime() {
     login,
     logout,
     messages,
+    nudges,
     onlineProfileIds,
     profile,
     sendMessage,
+    sendNudge,
     updatePersonalMessage,
   };
 }

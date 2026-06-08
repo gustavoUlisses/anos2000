@@ -35,3 +35,11 @@ export type MsnMessage = {
   senderId: string;
   senderNick: string;
 };
+
+export type MsnNudgeEvent = {
+  createdAt: string;
+  id: string;
+  recipientId: string;
+  sender: MsnContact;
+  senderId: string;
+};
