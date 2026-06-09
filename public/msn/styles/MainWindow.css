@@ -114,6 +114,27 @@ details {
   display: block;
 }
 
+.blocked-contact-row {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+  justify-content: space-between;
+  min-height: 20px;
+}
+
+.blocked-contact-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.unblock-button {
+  font-size: 11px !important;
+  line-height: 16px;
+  min-width: 74px;
+  padding: 0 5px;
+}
+
 .msn-account-footer {
   bottom: 5px;
   justify-content: flex-end !important;

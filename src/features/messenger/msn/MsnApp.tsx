@@ -148,6 +148,17 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
     void openChat(notification.contact);
   }
 
+  async function blockChatContact(contact: MsnContact) {
+    const wasBlocked = await messenger.blockContact(contact);
+
+    if (!wasBlocked) {
+      return;
+    }
+
+    setOnlineNotifications((current) => current.filter((notification) => notification.contact.id !== contact.id));
+    setOpenChats((current) => current.filter((chat) => chat.contact.id !== contact.id));
+  }
+
   const contactFromIncomingMessage = useCallback((message: MsnMessage): MsnContact => {
     const existingContact = contacts.find((contact) => contact.id === message.senderId);
 
@@ -422,6 +433,7 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
       {showLoginWindow && !isLoginMinimized ? (
         <div className="msn-window-slot">
           <MainWindow
+            blockedContacts={messenger.blockedContacts}
             contacts={messenger.contacts}
             isRealtimeConfigured={messenger.isRealtimeConfigured}
             onClose={closeLoginWindow}
@@ -430,6 +442,9 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
             onMinimize={() => setIsLoginMinimized(true)}
             onOpenChat={openChat}
             onPersonalMessageChange={messenger.updatePersonalMessage}
+            onUnblockContact={(contactId) => {
+              void messenger.unblockContact(contactId);
+            }}
             profile={messenger.profile}
           />
         </div>
@@ -450,6 +465,9 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
                 isContactOnline={contactOnline}
                 messages={messenger.getConversation(chat.contact.id)}
                 nudgeSignal={chat.nudgeSignal}
+                onBlockContact={() => {
+                  void blockChatContact(resolvedContact);
+                }}
                 onClose={() => closeChatWindow(chat.contact.id)}
                 onMinimize={() => minimizeChat(chat.contact.id)}
                 onNudgePlayed={() => clearChatNudgeSignal(chat.contact.id)}

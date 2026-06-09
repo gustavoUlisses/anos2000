@@ -3,7 +3,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
-import type { MsnChatPart, MsnContact, MsnMessage, MsnNudgeEvent, MsnOnlineEvent, MsnProfile } from "./types";
+import type {
+  MsnBlockedContact,
+  MsnChatPart,
+  MsnContact,
+  MsnMessage,
+  MsnNudgeEvent,
+  MsnOnlineEvent,
+  MsnProfile,
+} from "./types";
 
 const clientIdStorageKey = "anos2000:msn:client-id";
 const profileStorageKey = "anos2000:msn:profile";
@@ -291,6 +299,74 @@ async function persistPersonalMessage(profileId: string, personalMessage: string
   }).catch(() => undefined);
 }
 
+async function fetchBlockedContacts(profileId: string) {
+  if (!isUuid(profileId)) {
+    return [];
+  }
+
+  try {
+    const params = new URLSearchParams({ blockerId: profileId });
+    const response = await fetch(`/api/msn/blocks?${params.toString()}`);
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const data = await response.json() as { blockedContacts?: MsnBlockedContact[] };
+    return data.blockedContacts ?? [];
+  } catch {
+    return [];
+  }
+}
+
+async function persistBlockedContact(profileId: string, contact: MsnContact) {
+  if (!isUuid(profileId) || !isUuid(contact.id)) {
+    return null;
+  }
+
+  try {
+    const response = await fetch("/api/msn/blocks", {
+      body: JSON.stringify({
+        blockedId: contact.id,
+        blockedNickSnapshot: contact.nick,
+        blockerId: profileId,
+      }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json() as { blockedContact?: MsnBlockedContact };
+    return data.blockedContact ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function deleteBlockedContact(profileId: string, contactId: string) {
+  if (!isUuid(profileId) || !isUuid(contactId)) {
+    return false;
+  }
+
+  try {
+    const response = await fetch("/api/msn/blocks", {
+      body: JSON.stringify({
+        blockedId: contactId,
+        blockerId: profileId,
+      }),
+      headers: { "Content-Type": "application/json" },
+      method: "DELETE",
+    });
+
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
 async function announceOffline(channel: RealtimeChannel | null, profile: MsnProfile | null) {
   if (!channel || !profile) {
     return;
@@ -309,10 +385,12 @@ async function announceOffline(channel: RealtimeChannel | null, profile: MsnProf
 export function useMsnRealtime() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const announceOnlineOnSubscribe = useRef<string | null>(null);
+  const blockedContactIdsRef = useRef<Set<string>>(new Set());
   const channelRef = useRef<RealtimeChannel | null>(null);
   const lastNudgeReceivedAt = useRef<Map<string, number>>(new Map());
   const lastNudgeSentAt = useRef<Map<string, number>>(new Map());
   const [messages, setMessages] = useState<MsnMessage[]>([]);
+  const [blockedContacts, setBlockedContacts] = useState<MsnBlockedContact[]>([]);
   const [nudges, setNudges] = useState<MsnNudgeEvent[]>([]);
   const [onlineLogins, setOnlineLogins] = useState<MsnOnlineEvent[]>([]);
   const [hasPresenceSynced, setHasPresenceSynced] = useState(false);
@@ -324,6 +402,28 @@ export function useMsnRealtime() {
 
     return getStoredProfile();
   });
+
+  useEffect(() => {
+    blockedContactIdsRef.current = new Set(blockedContacts.map((contact) => contact.id));
+  }, [blockedContacts]);
+
+  useEffect(() => {
+    if (!profile) {
+      return;
+    }
+
+    let isActive = true;
+
+    void fetchBlockedContacts(profile.id).then((contacts) => {
+      if (isActive) {
+        setBlockedContacts(contacts);
+      }
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, [profile]);
 
   useEffect(() => {
     if (!profile || !supabase) {
@@ -359,6 +459,10 @@ export function useMsnRealtime() {
           return;
         }
 
+        if (payload.senderId !== profile.id && blockedContactIdsRef.current.has(payload.senderId)) {
+          return;
+        }
+
         setMessages((current) => dedupeMessages([...current, payload]));
       })
       .on("broadcast", { event: "nudge" }, ({ payload }: { payload: unknown }) => {
@@ -367,6 +471,10 @@ export function useMsnRealtime() {
         }
 
         if (payload.senderId === profile.id || payload.recipientId !== profile.id) {
+          return;
+        }
+
+        if (blockedContactIdsRef.current.has(payload.senderId)) {
           return;
         }
 
@@ -382,6 +490,10 @@ export function useMsnRealtime() {
       })
       .on("broadcast", { event: "user-online" }, ({ payload }: { payload: unknown }) => {
         if (!isMsnOnlineEvent(payload) || payload.contact.id === profile.id) {
+          return;
+        }
+
+        if (blockedContactIdsRef.current.has(payload.contact.id)) {
           return;
         }
 
@@ -470,6 +582,7 @@ export function useMsnRealtime() {
     }
 
     clearStoredSession();
+    setBlockedContacts([]);
     setMessages([]);
     setNudges([]);
     setOnlineLogins([]);
@@ -505,7 +618,7 @@ export function useMsnRealtime() {
   }, [profile]);
 
   const loadConversation = useCallback(async (contactId: string) => {
-    if (!profile) {
+    if (!profile || blockedContactIdsRef.current.has(contactId)) {
       return;
     }
 
@@ -517,7 +630,7 @@ export function useMsnRealtime() {
   }, [profile]);
 
   const sendMessage = useCallback(async (contact: MsnContact, parts: MsnChatPart[]) => {
-    if (!profile) {
+    if (!profile || blockedContactIdsRef.current.has(contact.id)) {
       return;
     }
 
@@ -544,7 +657,7 @@ export function useMsnRealtime() {
   }, [profile]);
 
   const sendNudge = useCallback((contact: MsnContact) => {
-    if (!profile || !channelRef.current) {
+    if (!profile || !channelRef.current || blockedContactIdsRef.current.has(contact.id)) {
       return false;
     }
 
@@ -599,6 +712,44 @@ export function useMsnRealtime() {
     setMessages((current) => dedupeMessages([...current, message]));
   }, [profile]);
 
+  const blockContact = useCallback(async (contact: MsnContact) => {
+    if (!profile || profile.id === contact.id || !isUuid(contact.id)) {
+      return false;
+    }
+
+    const optimisticContact: MsnBlockedContact = {
+      avatar: contact.avatar,
+      blockedAt: new Date().toISOString(),
+      id: contact.id,
+      nick: contact.nick,
+    };
+
+    setBlockedContacts((current) => dedupeBlockedContacts([optimisticContact, ...current]));
+    const persistedContact = await persistBlockedContact(profile.id, contact);
+
+    if (persistedContact) {
+      setBlockedContacts((current) => dedupeBlockedContacts([persistedContact, ...current]));
+    }
+
+    return true;
+  }, [profile]);
+
+  const unblockContact = useCallback(async (contactId: string) => {
+    if (!profile || !isUuid(contactId)) {
+      return false;
+    }
+
+    setBlockedContacts((current) => current.filter((contact) => contact.id !== contactId));
+    const wasDeleted = await deleteBlockedContact(profile.id, contactId);
+
+    if (!wasDeleted) {
+      const contacts = await fetchBlockedContacts(profile.id);
+      setBlockedContacts(contacts);
+    }
+
+    return wasDeleted;
+  }, [profile]);
+
   const contacts = useMemo(() => {
     if (!profile) {
       return [];
@@ -630,11 +781,17 @@ export function useMsnRealtime() {
       });
     }
 
-    return [...onlineContacts, ...offlineContacts];
-  }, [onlineProfiles, profile, supabase]);
+    const blockedIds = new Set(blockedContacts.map((contact) => contact.id));
+
+    return [...onlineContacts, ...offlineContacts].filter((contact) => !blockedIds.has(contact.id));
+  }, [blockedContacts, onlineProfiles, profile, supabase]);
 
   const getConversation = useCallback((contactId: string) => {
     if (!profile) {
+      return [];
+    }
+
+    if (blockedContactIdsRef.current.has(contactId)) {
       return [];
     }
 
@@ -650,6 +807,8 @@ export function useMsnRealtime() {
 
   return {
     addSystemMessage,
+    blockContact,
+    blockedContacts,
     contacts,
     getConversation,
     hasPresenceSynced,
@@ -664,6 +823,7 @@ export function useMsnRealtime() {
     profile,
     sendMessage,
     sendNudge,
+    unblockContact,
     updatePersonalMessage,
   };
 }
@@ -682,4 +842,14 @@ function dedupeProfiles(profiles: MsnProfile[]) {
 
     return a.nick.localeCompare(b.nick);
   });
+}
+
+function dedupeBlockedContacts(contacts: MsnBlockedContact[]) {
+  const byId = new Map<string, MsnBlockedContact>();
+
+  for (const contact of contacts) {
+    byId.set(contact.id, contact);
+  }
+
+  return Array.from(byId.values()).sort((a, b) => b.blockedAt.localeCompare(a.blockedAt));
 }

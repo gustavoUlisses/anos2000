@@ -79,6 +79,40 @@ export type Database = {
           }
         ];
       };
+      msn_blocks: {
+        Row: {
+          blocked_id: string;
+          blocked_nick_snapshot: string;
+          blocker_id: string;
+          created_at: string;
+        };
+        Insert: {
+          blocked_id: string;
+          blocked_nick_snapshot: string;
+          blocker_id: string;
+          created_at?: string;
+        };
+        Update: {
+          blocked_id?: string;
+          blocked_nick_snapshot?: string;
+          blocker_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "msn_blocks_blocked_id_fkey";
+            columns: ["blocked_id"];
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "msn_blocks_blocker_id_fkey";
+            columns: ["blocker_id"];
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

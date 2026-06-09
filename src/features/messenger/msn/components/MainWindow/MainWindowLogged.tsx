@@ -1,12 +1,14 @@
 import { useState } from "react";
-import type { MsnContact, MsnProfile } from "../../types";
+import type { MsnBlockedContact, MsnContact, MsnProfile } from "../../types";
 
 type MainWindowLoggedProps = {
+  blockedContacts: MsnBlockedContact[];
   contacts: MsnContact[];
   isRealtimeConfigured: boolean;
   onLogout: () => void;
   onOpenChat: (contact: MsnContact) => void;
   onPersonalMessageChange: (message: string) => void;
+  onUnblockContact: (contactId: string) => void;
   profile: MsnProfile;
 };
 
@@ -17,11 +19,13 @@ const statusIcon = {
 };
 
 export function MainWindowLogged({
+  blockedContacts,
   contacts,
   isRealtimeConfigured,
   onLogout,
   onOpenChat,
   onPersonalMessageChange,
+  onUnblockContact,
   profile,
 }: MainWindowLoggedProps) {
   const personalMessage = profile.personalMessage.trim() || (profile.isAdmin ? "Criador do projeto" : "");
@@ -151,6 +155,29 @@ export function MainWindowLogged({
                 </div>
               ))}
             </details>
+            {blockedContacts.length ? (
+              <>
+                <hr className="my-1" />
+                <details>
+                  <summary className="fw-bold">Bloqueados ({blockedContacts.length})</summary>
+                  {blockedContacts.map((contact) => (
+                    <div className="blocked-contact-row" key={contact.id}>
+                      <div className="d-flex gap-1 align-items-center min-w-0">
+                        <img src="/msn/images/user/user-blocked.png" alt="Blocked user icon" width={16} />
+                        <span className="blocked-contact-name">{contact.nick}</span>
+                      </div>
+                      <button
+                        className="unblock-button"
+                        onClick={() => onUnblockContact(contact.id)}
+                        type="button"
+                      >
+                        Desbloquear
+                      </button>
+                    </div>
+                  ))}
+                </details>
+              </>
+            ) : null}
           </div>
         </div>
       </div>

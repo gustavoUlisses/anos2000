@@ -101,6 +101,20 @@ export async function POST(request: Request) {
   try {
     const supabase = createAdminSupabaseClient();
     const message = parsedBody.data;
+    const { count: blockCount, error: blockError } = await supabase
+      .from("msn_blocks")
+      .select("blocker_id", { count: "exact", head: true })
+      .eq("blocked_id", message.senderId)
+      .eq("blocker_id", message.recipientId);
+
+    if (blockError) {
+      return NextResponse.json({ error: blockError.message }, { status: 500 });
+    }
+
+    if ((blockCount ?? 0) > 0) {
+      return NextResponse.json({ error: "Recipient blocked sender." }, { status: 403 });
+    }
+
     const { error } = await supabase
       .from("chat_messages")
       .insert({

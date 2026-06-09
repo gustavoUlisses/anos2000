@@ -26,6 +26,13 @@ export type MsnContact = {
   status: "online" | "away" | "offline";
 };
 
+export type MsnBlockedContact = {
+  avatar: string;
+  blockedAt: string;
+  id: string;
+  nick: string;
+};
+
 export type MsnMessage = {
   createdAt: string;
   id: string;

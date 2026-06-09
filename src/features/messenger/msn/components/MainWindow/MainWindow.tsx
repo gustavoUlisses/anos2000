@@ -6,9 +6,10 @@ import { LoginWindowToolbar } from "./LoginWindowToolbar";
 import { MainWindowLoading } from "./MainWindowLoading";
 import { MainWindowLogged } from "./MainWindowLogged";
 import { MainWindowNotLogged } from "./MainWindowNotLogged";
-import type { MsnContact, MsnProfile } from "../../types";
+import type { MsnBlockedContact, MsnContact, MsnProfile } from "../../types";
 
 type MainWindowProps = {
+  blockedContacts: MsnBlockedContact[];
   contacts: MsnContact[];
   isRealtimeConfigured: boolean;
   onClose: () => void;
@@ -17,10 +18,12 @@ type MainWindowProps = {
   onMinimize: () => void;
   onOpenChat: (contact: MsnContact) => void;
   onPersonalMessageChange: (message: string) => void;
+  onUnblockContact: (contactId: string) => void;
   profile: MsnProfile | null;
 };
 
 export function MainWindow({
+  blockedContacts,
   contacts,
   isRealtimeConfigured,
   onClose,
@@ -29,6 +32,7 @@ export function MainWindow({
   onMinimize,
   onOpenChat,
   onPersonalMessageChange,
+  onUnblockContact,
   profile,
 }: MainWindowProps) {
   const nodeRef = useRef<HTMLDivElement | null>(null);
@@ -56,11 +60,13 @@ export function MainWindow({
 
         {profile && !isLoading && (
           <MainWindowLogged
+            blockedContacts={blockedContacts}
             contacts={contacts}
             isRealtimeConfigured={isRealtimeConfigured}
             onLogout={onLogout}
             onOpenChat={onOpenChat}
             onPersonalMessageChange={onPersonalMessageChange}
+            onUnblockContact={onUnblockContact}
             profile={profile}
           />
         )}

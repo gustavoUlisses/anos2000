@@ -10,6 +10,7 @@ type ChatWindowProps = {
   isContactOnline: boolean;
   messages: MsnMessage[];
   nudgeSignal: number;
+  onBlockContact: () => void;
   onClose: () => void;
   onMinimize: () => void;
   onNudgePlayed: () => void;
@@ -23,6 +24,7 @@ export function ChatWindow({
   isContactOnline,
   messages,
   nudgeSignal,
+  onBlockContact,
   onClose,
   onMinimize,
   onNudgePlayed,
@@ -243,7 +245,14 @@ export function ChatWindow({
           <img role="button" src="/msn/images/msn-icons/music.png" alt="Icon" width="20" />
           <img role="button" src="/msn/images/msn-icons/phone.png" alt="Icon" width="20" />
           <img role="button" src="/msn/images/msn-icons/games.png" alt="Icon" width="20" />
-          <img role="button" src="/msn/images/user/user-blocked.png" alt="Icon" width="20" />
+          <img
+            role="button"
+            src="/msn/images/user/user-blocked.png"
+            alt="Block contact"
+            title="Bloquear contato"
+            width="20"
+            onClick={onBlockContact}
+          />
         </div>
         <div className="row g-0 mx-2 messages-block-row">
           <div className="col col-md-9">

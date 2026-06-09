@@ -22,8 +22,18 @@ create table if not exists public.chat_messages (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.msn_blocks (
+  blocker_id uuid not null references public.profiles(id) on delete cascade,
+  blocked_id uuid not null references public.profiles(id) on delete cascade,
+  blocked_nick_snapshot text not null,
+  created_at timestamptz not null default now(),
+  primary key (blocker_id, blocked_id),
+  check (blocker_id <> blocked_id)
+);
+
 alter table public.profiles enable row level security;
 alter table public.chat_messages enable row level security;
+alter table public.msn_blocks enable row level security;
 
 create policy "profiles are readable"
 on public.profiles
