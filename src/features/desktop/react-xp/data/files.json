@@ -15,30 +15,37 @@
             }
         ],
         [
-            "msn",
+            "uolChat",
             {
                 "top": 145,
                 "left": 5
             }
         ],
         [
-            "winamp",
+            "msn",
             {
                 "top": 220,
                 "left": 5
             }
         ],
         [
-            "ragnarok",
+            "winamp",
             {
                 "top": 295,
                 "left": 5
             }
         ],
         [
-            "paint",
+            "ragnarok",
             {
                 "top": 370,
+                "left": 5
+            }
+        ],
+        [
+            "paint",
+            {
+                "top": 445,
                 "left": 5
             }
         ],

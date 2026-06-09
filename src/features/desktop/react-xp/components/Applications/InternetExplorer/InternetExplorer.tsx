@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useContext } from "../../../context/context";
 import applicationsJSON from "../../../data/applications.json";
-import { getCurrentWindow } from "../../../utils/general";
+import { getCurrentWindow, openApplication } from "../../../utils/general";
 import WindowMenu from "../../WindowMenu/WindowMenu";
 import styles from "./InternetExplorer.module.scss";
 import type { Application } from "../../../context/types";
@@ -12,8 +12,19 @@ const DEFAULT_WAYBACK_YEAR = 2011;
 const WAYBACK_YEARS = Array.from({ length: 21 }, (_, index) => 2000 + index);
 const DIRECT_ALLOWED_URLS = ["https://yorgute.com/inicio"];
 
-const IE_FAVORITES = [
+type IeFavorite = {
+    appId?: never;
+    label: string;
+    url: string;
+} | {
+    appId: string;
+    label: string;
+    url?: never;
+};
+
+const IE_FAVORITES: IeFavorite[] = [
     { label: "Orkut", url: "https://yorgute.com/inicio" },
+    { appId: "uolChat", label: "Bate-Papo UOL" },
 ];
 
 const normalizeUrl = (inputValue: string) => {
@@ -130,8 +141,15 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
         navigateTo(HOMEPAGE);
     };
 
-    const favoriteClickHandler = (url: string) => {
-        navigateTo(url);
+    const favoriteClickHandler = (favorite: typeof IE_FAVORITES[number]) => {
+        if (favorite.appId) {
+            openApplication(favorite.appId, currentWindows, dispatch);
+            return;
+        }
+
+        if (favorite.url) {
+            navigateTo(favorite.url);
+        }
     };
 
     const yearClickHandler = (year: number) => {
@@ -226,7 +244,7 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
                 <section className={`${styles.favoritesMenu} flex items-center`}>
                     <span>Favorites</span>
                     {IE_FAVORITES.map((favorite) => (
-                        <button key={favorite.url} type="button" onClick={() => favoriteClickHandler(favorite.url)}>
+                        <button key={"url" in favorite ? favorite.url : favorite.appId} type="button" onClick={() => favoriteClickHandler(favorite)}>
                             {favorite.label}
                         </button>
                     ))}

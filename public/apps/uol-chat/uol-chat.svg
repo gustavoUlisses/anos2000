@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <rect x="6" y="10" width="52" height="42" rx="3" fill="#ffffff" stroke="#222222" stroke-width="3"/>
+  <circle cx="18" cy="24" r="7" fill="#f4cf10"/>
+  <path d="M18 17a7 7 0 0 1 7 7h-7z" fill="#2f8de6"/>
+  <path d="M18 24h7a7 7 0 0 1-7 7z" fill="#e33d2d"/>
+  <path d="M18 24v7a7 7 0 0 1-7-7z" fill="#35a852"/>
+  <text x="30" y="25" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" fill="#111">BATE</text>
+  <text x="30" y="36" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" fill="#111">PAPO</text>
+  <rect x="11" y="42" width="42" height="5" fill="#79cc6f"/>
+</svg>

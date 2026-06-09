@@ -16,6 +16,7 @@ const windowRegistry: Record<string, () => Promise<{ default: React.ComponentTyp
     Ragnarok: () => import("../Applications/Ragnarok/Ragnarok"),
     Run: () => import("../Applications/Run/Run"),
     Settings: () => import("../Applications/Settings/Settings"),
+    UolChat: () => import("../Applications/UolChat/UolChat"),
     WebEmbed: () => import("../Applications/WebEmbed/WebEmbed"),
 };
 
