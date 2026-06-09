@@ -100,7 +100,7 @@
         "icon": "/apps/gunbound/gunbound.png",
         "iconLarge": "/apps/gunbound/gunbound.png",
         "component": "WebEmbed",
-        "embedUrl": "https://legendarybound.com/",
+        "embedUrl": "https://dragonbound.net/",
         "height": 640,
         "width": 960,
         "top": 35,
