@@ -10,6 +10,7 @@ export type MsnChatPart =
   };
 
 export type MsnProfile = {
+  avatar: string;
   id: string;
   isAdmin: boolean;
   lastSeenAt: string;

@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getServerEnv } from "@/lib/env";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { defaultMsnAvatar, normalizeMsnAvatar } from "@/features/messenger/msn/avatars";
 
 const sessionSchema = z.object({
+  avatarUrl: z.string().optional(),
   clientId: z.string().uuid(),
   nick: z.string().trim().min(1).max(24),
   password: z.string().optional(),
@@ -11,8 +13,9 @@ const sessionSchema = z.object({
 });
 
 const profileMessageSchema = z.object({
+  avatarUrl: z.string().optional(),
   clientId: z.string().uuid(),
-  personalMessage: z.string(),
+  personalMessage: z.string().optional(),
 });
 
 function normalizePersonalMessage(message: string | undefined) {
@@ -38,6 +41,7 @@ export async function POST(request: Request) {
     }
 
     const profile = {
+      avatar_url: normalizeMsnAvatar(parsedBody.data.avatarUrl ?? defaultMsnAvatar),
       id: parsedBody.data.clientId,
       is_admin: isGusDev,
       last_seen_at: new Date().toISOString(),
@@ -50,7 +54,7 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from("profiles")
       .upsert(profile, { onConflict: "id" })
-      .select("id,nick,personal_message,is_admin,last_seen_at")
+      .select("id,nick,personal_message,avatar_url,is_admin,last_seen_at")
       .single();
 
     if (error) {
@@ -59,6 +63,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       profile: {
+        avatar: normalizeMsnAvatar(data.avatar_url),
         id: data.id,
         isAdmin: data.is_admin,
         lastSeenAt: data.last_seen_at ?? new Date().toISOString(),
@@ -80,16 +85,27 @@ export async function PATCH(request: Request) {
 
   try {
     const supabase = createAdminSupabaseClient();
-    const personalMessage = normalizePersonalMessage(parsedBody.data.personalMessage);
+    const updates: {
+      avatar_url?: string;
+      last_seen_at: string;
+      personal_message?: string;
+    } = {
+      last_seen_at: new Date().toISOString(),
+    };
+
+    if (parsedBody.data.personalMessage !== undefined) {
+      updates.personal_message = normalizePersonalMessage(parsedBody.data.personalMessage);
+    }
+
+    if (parsedBody.data.avatarUrl !== undefined) {
+      updates.avatar_url = normalizeMsnAvatar(parsedBody.data.avatarUrl);
+    }
 
     const { data, error } = await supabase
       .from("profiles")
-      .update({
-        last_seen_at: new Date().toISOString(),
-        personal_message: personalMessage,
-      })
+      .update(updates)
       .eq("id", parsedBody.data.clientId)
-      .select("id,nick,personal_message,is_admin,last_seen_at")
+      .select("id,nick,personal_message,avatar_url,is_admin,last_seen_at")
       .single();
 
     if (error) {
@@ -98,6 +114,7 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({
       profile: {
+        avatar: normalizeMsnAvatar(data.avatar_url),
         id: data.id,
         isAdmin: data.is_admin,
         lastSeenAt: data.last_seen_at ?? new Date().toISOString(),

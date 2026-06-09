@@ -441,6 +441,7 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
             contacts={messenger.contacts}
             isRealtimeConfigured={messenger.isRealtimeConfigured}
             onClose={closeLoginWindow}
+            onAvatarChange={messenger.updateAvatar}
             onLogin={messenger.login}
             onLogout={logout}
             onMinimize={() => setIsLoginMinimized(true)}

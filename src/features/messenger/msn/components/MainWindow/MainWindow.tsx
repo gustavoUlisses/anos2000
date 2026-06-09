@@ -13,10 +13,11 @@ type MainWindowProps = {
   contacts: MsnContact[];
   isRealtimeConfigured: boolean;
   onClose: () => void;
-  onLogin: (nick: string, password?: string) => Promise<void>;
+  onLogin: (nick: string, password?: string, avatar?: string) => Promise<void>;
   onLogout: () => void;
   onMinimize: () => void;
   onOpenChat: (contact: MsnContact) => void;
+  onAvatarChange: (avatar: string) => void;
   onPersonalMessageChange: (message: string) => void;
   onUnblockContact: (contactId: string) => void;
   profile: MsnProfile | null;
@@ -31,6 +32,7 @@ export function MainWindow({
   onLogout,
   onMinimize,
   onOpenChat,
+  onAvatarChange,
   onPersonalMessageChange,
   onUnblockContact,
   profile,
@@ -38,10 +40,10 @@ export function MainWindow({
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  async function login(nick: string, password?: string) {
+  async function login(nick: string, password?: string, avatar?: string) {
     setIsLoading(true);
     try {
-      await onLogin(nick, password);
+      await onLogin(nick, password, avatar);
     } finally {
       setIsLoading(false);
     }
@@ -63,6 +65,7 @@ export function MainWindow({
             blockedContacts={blockedContacts}
             contacts={contacts}
             isRealtimeConfigured={isRealtimeConfigured}
+            onAvatarChange={onAvatarChange}
             onLogout={onLogout}
             onOpenChat={onOpenChat}
             onPersonalMessageChange={onPersonalMessageChange}

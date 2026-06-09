@@ -1,11 +1,14 @@
 import { useState } from "react";
+import { defaultMsnAvatar, msnAvatarOptions } from "../../avatars";
 
 type MainWindowNotLoggedProps = {
-  handleLogin: (nick: string, password?: string) => Promise<void>;
+  handleLogin: (nick: string, password?: string, avatar?: string) => Promise<void>;
 };
 
 export function MainWindowNotLogged({ handleLogin }: MainWindowNotLoggedProps) {
+  const [avatar, setAvatar] = useState(defaultMsnAvatar);
   const [error, setError] = useState("");
+  const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
 
   async function submitLogin(form: HTMLFormElement) {
     const formData = new FormData(form);
@@ -24,7 +27,7 @@ export function MainWindowNotLogged({ handleLogin }: MainWindowNotLoggedProps) {
 
     setError("");
     try {
-      await handleLogin(nick, password);
+      await handleLogin(nick, password, avatar);
     } catch {
       setError(nick.toLowerCase() === "gusdev" ? "Senha do GusDev invalida." : "Nao foi possivel entrar agora.");
     }
@@ -35,9 +38,16 @@ export function MainWindowNotLogged({ handleLogin }: MainWindowNotLoggedProps) {
       <div className="d-flex flex-column justify-content-between">
         <div>
           <div className="d-flex justify-content-center my-5">
-            <div className="msn-avatar-frame msn-avatar-frame-login">
-              <img src="/msn/images/user.png" alt="User" />
-            </div>
+            <button
+              aria-label="Escolher avatar"
+              className="msn-avatar-button"
+              onClick={() => setIsAvatarPickerOpen(true)}
+              type="button"
+            >
+              <span className="msn-avatar-frame msn-avatar-frame-login">
+                <img src={avatar} alt="User" />
+              </span>
+            </button>
           </div>
           <form
             className="px-4"
@@ -94,6 +104,32 @@ export function MainWindowNotLogged({ handleLogin }: MainWindowNotLoggedProps) {
         </svg>
         <span className="text-secondary ps-1">Windows Live ID</span>
       </div>
+      {isAvatarPickerOpen ? (
+        <div className="avatar-picker" role="dialog" aria-label="Escolher avatar">
+          <div className="avatar-picker-header">
+            <span>Escolher imagem</span>
+            <button onClick={() => setIsAvatarPickerOpen(false)} type="button">X</button>
+          </div>
+          <div className="avatar-picker-grid">
+            {msnAvatarOptions.map((option) => (
+              <button
+                aria-label="Selecionar avatar"
+                className={`avatar-picker-option ${avatar === option ? "is-selected" : ""}`}
+                key={option}
+                onClick={() => {
+                  setAvatar(option);
+                  setIsAvatarPickerOpen(false);
+                }}
+                type="button"
+              >
+                <span className="msn-avatar-frame msn-avatar-frame-picker">
+                  <img src={option} alt="" />
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }

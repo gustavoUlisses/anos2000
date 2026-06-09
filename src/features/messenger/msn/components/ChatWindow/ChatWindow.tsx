@@ -335,7 +335,7 @@ export function ChatWindow({
             </div>
             <div className="p-lg-2 p-1">
               <div className="msn-avatar-frame msn-avatar-frame-chat">
-                <img src="/msn/images/user.png" alt="User profile" className="user-profile-pic" />
+                <img src={currentProfile.avatar} alt="User profile" className="user-profile-pic" />
               </div>
             </div>
           </div>

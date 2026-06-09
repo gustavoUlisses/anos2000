@@ -12,6 +12,7 @@ import type {
   MsnOnlineEvent,
   MsnProfile,
 } from "./types";
+import { defaultMsnAvatar, normalizeMsnAvatar } from "./avatars";
 
 const clientIdStorageKey = "anos2000:msn:client-id";
 const profileStorageKey = "anos2000:msn:profile";
@@ -70,6 +71,7 @@ function normalizePersonalMessage(rawMessage: string | undefined) {
 function ensureProfileDefaults(profile: MsnProfile): MsnProfile {
   return {
     ...profile,
+    avatar: normalizeMsnAvatar(profile.avatar),
     personalMessage: normalizePersonalMessage(profile.personalMessage),
   };
 }
@@ -221,9 +223,10 @@ function dedupeMessages(messages: MsnMessage[]) {
   });
 }
 
-async function createSessionProfile(clientId: string, nick: string, password?: string) {
+async function createSessionProfile(clientId: string, nick: string, password?: string, avatar?: string) {
   const isGusDev = nick.toLowerCase() === "gusdev";
   const fallbackProfile: MsnProfile = {
+    avatar: normalizeMsnAvatar(avatar),
     id: clientId,
     isAdmin: false,
     lastSeenAt: new Date().toISOString(),
@@ -235,6 +238,7 @@ async function createSessionProfile(clientId: string, nick: string, password?: s
     const response = await fetch("/api/msn/session", {
       body: JSON.stringify({
         clientId,
+        avatarUrl: normalizeMsnAvatar(avatar),
         nick,
         password,
         personalMessage: isGusDev ? "Criador do projeto" : "",
@@ -301,6 +305,18 @@ async function persistPersonalMessage(profileId: string, personalMessage: string
 
   await fetch("/api/msn/session", {
     body: JSON.stringify({ clientId: profileId, personalMessage }),
+    headers: { "Content-Type": "application/json" },
+    method: "PATCH",
+  }).catch(() => undefined);
+}
+
+async function persistAvatar(profileId: string, avatarUrl: string) {
+  if (!isUuid(profileId)) {
+    return;
+  }
+
+  await fetch("/api/msn/session", {
+    body: JSON.stringify({ avatarUrl, clientId: profileId }),
     headers: { "Content-Type": "application/json" },
     method: "PATCH",
   }).catch(() => undefined);
@@ -540,7 +556,7 @@ export function useMsnRealtime() {
             event: "user-online",
             payload: {
               contact: {
-                avatar: "/msn/images/user.png",
+                avatar: profile.avatar,
                 id: profile.id,
                 isAdmin: profile.isAdmin,
                 message: profile.personalMessage || (profile.isAdmin ? "Criador do projeto" : ""),
@@ -580,9 +596,9 @@ export function useMsnRealtime() {
     };
   }, [profile, supabase]);
 
-  const login = useCallback(async (rawNick: string, password?: string) => {
+  const login = useCallback(async (rawNick: string, password?: string, avatar?: string) => {
     const nick = normalizeNick(rawNick);
-    const nextProfile = await createSessionProfile(getClientId(), nick, password);
+    const nextProfile = await createSessionProfile(getClientId(), nick, password, avatar);
     announceOnlineOnSubscribe.current = nextProfile.id;
     storeProfile(nextProfile);
     setProfile(nextProfile);
@@ -633,6 +649,32 @@ export function useMsnRealtime() {
     }
 
     void persistPersonalMessage(nextProfile.id, personalMessage);
+  }, [profile]);
+
+  const updateAvatar = useCallback((avatarUrl: string) => {
+    if (!profile) {
+      return;
+    }
+
+    const avatar = normalizeMsnAvatar(avatarUrl);
+    const nextProfile: MsnProfile = {
+      ...profile,
+      avatar,
+      lastSeenAt: new Date().toISOString(),
+    };
+
+    storeProfile(nextProfile);
+    setProfile(nextProfile);
+    setOnlineProfiles((current) => dedupeProfiles([
+      ...current.filter((onlineProfile) => onlineProfile.id !== nextProfile.id),
+      nextProfile,
+    ]));
+
+    if (channelRef.current) {
+      void channelRef.current.track(nextProfile);
+    }
+
+    void persistAvatar(nextProfile.id, avatar);
   }, [profile]);
 
   const loadConversation = useCallback(async (contactId: string) => {
@@ -693,7 +735,7 @@ export function useMsnRealtime() {
       id: createId(),
       recipientId: contact.id,
       sender: {
-        avatar: "/msn/images/user.png",
+        avatar: profile.avatar,
         id: profile.id,
         isAdmin: profile.isAdmin,
         message: profile.personalMessage || (profile.isAdmin ? "Criador do projeto" : ""),
@@ -780,7 +822,7 @@ export function useMsnRealtime() {
     const onlineContacts: MsnContact[] = freshOnlineProfiles
       .filter((onlineProfile) => onlineProfile.id !== profile.id)
       .map((onlineProfile) => ({
-        avatar: "/msn/images/user.png",
+        avatar: onlineProfile.avatar,
         id: onlineProfile.id,
         isAdmin: onlineProfile.isAdmin,
         message: onlineProfile.personalMessage || (onlineProfile.isAdmin ? "Criador do projeto" : ""),
@@ -793,7 +835,7 @@ export function useMsnRealtime() {
 
     if (!hasGusDevOnline && profile.nick.toLowerCase() !== "gusdev") {
       offlineContacts.push({
-        avatar: "/msn/images/user.png",
+        avatar: defaultMsnAvatar,
         id: gusDevId,
         isAdmin: true,
         message: "Criador do projeto",
@@ -848,6 +890,7 @@ export function useMsnRealtime() {
     sendNudge,
     unblockContact,
     updatePersonalMessage,
+    updateAvatar,
   };
 }
 

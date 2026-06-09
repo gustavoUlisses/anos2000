@@ -1,10 +1,12 @@
 import { useState } from "react";
 import type { MsnBlockedContact, MsnContact, MsnProfile } from "../../types";
+import { msnAvatarOptions } from "../../avatars";
 
 type MainWindowLoggedProps = {
   blockedContacts: MsnBlockedContact[];
   contacts: MsnContact[];
   isRealtimeConfigured: boolean;
+  onAvatarChange: (avatar: string) => void;
   onLogout: () => void;
   onOpenChat: (contact: MsnContact) => void;
   onPersonalMessageChange: (message: string) => void;
@@ -22,6 +24,7 @@ export function MainWindowLogged({
   blockedContacts,
   contacts,
   isRealtimeConfigured,
+  onAvatarChange,
   onLogout,
   onOpenChat,
   onPersonalMessageChange,
@@ -30,6 +33,7 @@ export function MainWindowLogged({
 }: MainWindowLoggedProps) {
   const personalMessage = profile.personalMessage.trim() || (profile.isAdmin ? "Criador do projeto" : "");
   const [draftMessage, setDraftMessage] = useState(personalMessage);
+  const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
   const [isEditingMessage, setIsEditingMessage] = useState(false);
   const onlineContacts = contacts.filter((contact) => contact.status === "online" || contact.status === "away");
   const offlineContacts = contacts.filter((contact) => contact.status === "offline");
@@ -50,15 +54,27 @@ export function MainWindowLogged({
     onPersonalMessageChange(nextMessage);
   }
 
+  function chooseAvatar(avatar: string) {
+    onAvatarChange(avatar);
+    setIsAvatarPickerOpen(false);
+  }
+
   return (
     <div className="logged-window-content">
       <div className="logged-window-main">
         <div className="logged-window-header p-1 my-2 position-relative">
           <div className="row g-0 align-items-center">
             <div className="col-auto">
-              <div className="msn-avatar-frame msn-avatar-frame-main">
-                <img src="/msn/images/user.png" alt="User profile" />
-              </div>
+              <button
+                aria-label="Escolher avatar"
+                className="msn-avatar-button"
+                onClick={() => setIsAvatarPickerOpen(true)}
+                type="button"
+              >
+                <span className="msn-avatar-frame msn-avatar-frame-main">
+                  <img src={profile.avatar} alt="User profile" />
+                </span>
+              </button>
             </div>
             <div className="col d-flex flex-column ps-2">
               <span className="fw-bold">{profile.nick}</span>
@@ -190,6 +206,29 @@ export function MainWindowLogged({
           Sair
         </button>
       </div>
+      {isAvatarPickerOpen ? (
+        <div className="avatar-picker" role="dialog" aria-label="Escolher avatar">
+          <div className="avatar-picker-header">
+            <span>Escolher imagem</span>
+            <button onClick={() => setIsAvatarPickerOpen(false)} type="button">X</button>
+          </div>
+          <div className="avatar-picker-grid">
+            {msnAvatarOptions.map((avatar) => (
+              <button
+                aria-label="Selecionar avatar"
+                className={`avatar-picker-option ${profile.avatar === avatar ? "is-selected" : ""}`}
+                key={avatar}
+                onClick={() => chooseAvatar(avatar)}
+                type="button"
+              >
+                <span className="msn-avatar-frame msn-avatar-frame-picker">
+                  <img src={avatar} alt="" />
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -14,6 +14,7 @@ export type Database = {
           id: string;
           nick: string;
           personal_message: string;
+          avatar_url: string;
           is_admin: boolean;
           created_at: string;
           last_seen_at: string | null;
@@ -22,6 +23,7 @@ export type Database = {
           id?: string;
           nick: string;
           personal_message?: string;
+          avatar_url?: string;
           is_admin?: boolean;
           created_at?: string;
           last_seen_at?: string | null;
@@ -30,6 +32,7 @@ export type Database = {
           id?: string;
           nick?: string;
           personal_message?: string;
+          avatar_url?: string;
           is_admin?: boolean;
           created_at?: string;
           last_seen_at?: string | null;
