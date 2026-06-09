@@ -10,7 +10,7 @@ import type { Application } from "../../context/types";
 const applications = applicationsJSON as unknown as Record<string, Application>;
 
 const TaskBar = () => {
-    const { currentTime, currentWindows, isStartVisible, messengerTaskbarItems, dispatch } = useContext();
+    const { currentTime, currentWindows, isStartVisible, messengerTaskbarItems, winampTaskbarItem, dispatch } = useContext();
     const [systemTrayIconDismissed, setSystemTrayIconDismissed] = useState(false);
     const startButtonRef = useRef<HTMLButtonElement | null>(null);
     const startButton = startButtonRef.current;
@@ -53,6 +53,10 @@ const TaskBar = () => {
         }));
     };
 
+    const winampTaskbarClickHandler = () => {
+        window.dispatchEvent(new CustomEvent("anos2000:winamp-taskbar-click"));
+    };
+
     const startButtonClickHandler = (event: React.MouseEvent) => {
         event?.stopPropagation();
         dispatch({ type: "SET_IS_START_VISIBLE", payload: (isStartVisible) ? false : true });
@@ -93,7 +97,7 @@ const TaskBar = () => {
                     <li
                         key={item.id}
                         onClick={() => messengerTaskbarClickHandler(item.id)}
-                        data-active={false}
+                        data-active={item.active ?? false}
                         data-attention={item.attention}
                     >
                         <span className="w-full relative flex">
@@ -102,6 +106,18 @@ const TaskBar = () => {
                         </span>
                     </li>
                 ))}
+                {winampTaskbarItem && (
+                    <li
+                        onClick={winampTaskbarClickHandler}
+                        data-active={winampTaskbarItem.active ?? false}
+                        data-attention={winampTaskbarItem.attention}
+                    >
+                        <span className="w-full relative flex">
+                            <img src={winampTaskbarItem.icon} width="14" height="14" className="mr-2 min-w-5.5"></img>
+                            <span className="absolute ml-7">{winampTaskbarItem.title}</span>
+                        </span>
+                    </li>
+                )}
             </ul>
             <div className={`${styles.systemTray} flex justify-center items-center`}>
                 <ul className="flex">

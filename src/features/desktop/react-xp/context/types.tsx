@@ -23,12 +23,15 @@ export interface currentWindow {
 }
 export type currentWindows = currentWindow[];
 
-export interface MessengerTaskbarItem {
+export interface OverlayTaskbarItem {
+    active?: boolean;
     attention?: boolean;
     icon: string;
     id: string;
     title: string;
 }
+
+export type MessengerTaskbarItem = OverlayTaskbarItem;
 
 export interface AbsoluteObject {
     top?: number | undefined;
@@ -70,6 +73,8 @@ export interface State {
     isInitialBoot: boolean;
     isMessengerOpen: boolean;
     messengerTaskbarItems: MessengerTaskbarItem[];
+    isWinampOpen: boolean;
+    winampTaskbarItem: OverlayTaskbarItem | null;
     transitionLabel: string;
     isCRTEnabled: boolean;
     themeColor: themeColor;
@@ -88,6 +93,8 @@ export type Action =
     | { type: "SET_IS_INITIAL_BOOT"; payload: boolean; }
     | { type: "SET_IS_MESSENGER_OPEN"; payload: boolean; }
     | { type: "SET_MESSENGER_TASKBAR_ITEMS"; payload: MessengerTaskbarItem[]; }
+    | { type: "SET_IS_WINAMP_OPEN"; payload: boolean; }
+    | { type: "SET_WINAMP_TASKBAR_ITEM"; payload: OverlayTaskbarItem | null; }
     | { type: "SET_TRANSITION_LABEL"; payload: string; }
     | { type: "SET_IS_CRT_ENABLED"; payload: boolean; }
     | { type: "SET_THEME_COLOR"; payload: themeColor;}

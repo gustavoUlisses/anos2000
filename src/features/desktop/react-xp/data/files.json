@@ -22,6 +22,13 @@
             }
         ],
         [
+            "winamp",
+            {
+                "top": 220,
+                "left": 5
+            }
+        ],
+        [
             "recycleBin",
             {
                 "bottom": 5,

@@ -43,6 +43,12 @@ export const openApplication = (appId: string, currentWindows: currentWindow[], 
         return;
     }
 
+    if (appId === "winamp") {
+        dispatch({ type: "SET_IS_WINAMP_OPEN", payload: true });
+        dispatch({ type: "SET_IS_START_VISIBLE", payload: false });
+        return;
+    }
+
     const newWindow: currentWindow = {
         id: generateUniqueId(),
         appId,

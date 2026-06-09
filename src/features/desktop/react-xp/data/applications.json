@@ -45,6 +45,12 @@
         "iconLarge": "/msn/images/msn.webp",
         "content": "placeholder"
     },
+    "winamp": {
+        "title": "Winamp",
+        "icon": "/winamp/images/winamp.png",
+        "iconLarge": "/winamp/images/winamp.png",
+        "content": "placeholder"
+    },
     "recentDocuments": {
         "title": "My Recent Documents",
         "iconLarge": "/icon__recent_documents--large.png",

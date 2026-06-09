@@ -34,6 +34,10 @@ export const reducer = (state: State, action: Action): State => {
         return { ...state, isMessengerOpen: action.payload };
     case "SET_MESSENGER_TASKBAR_ITEMS":
         return { ...state, messengerTaskbarItems: action.payload };
+    case "SET_IS_WINAMP_OPEN":
+        return { ...state, isWinampOpen: action.payload };
+    case "SET_WINAMP_TASKBAR_ITEM":
+        return { ...state, winampTaskbarItem: action.payload };
     case "SET_TRANSITION_LABEL":
         return { ...state, transitionLabel: action.payload };
     case "SET_IS_CRT_ENABLED": 
@@ -62,6 +66,8 @@ export const initialState: State = {
     isInitialBoot: true,
     isMessengerOpen: false,
     messengerTaskbarItems: [],
+    isWinampOpen: false,
+    winampTaskbarItem: null,
     transitionLabel: "",
     isCRTEnabled: true,
     themeColor: "blue",

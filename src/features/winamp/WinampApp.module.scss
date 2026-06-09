@@ -1,0 +1,29 @@
+.winampLayer {
+    position: fixed;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+
+    :global(#webamp) {
+        pointer-events: auto;
+    }
+
+    &[data-minimized="true"] {
+        visibility: hidden;
+        pointer-events: none;
+    }
+}
+
+.fallback {
+    position: absolute;
+    top: 8rem;
+    left: 10rem;
+    width: 27.5rem;
+    min-height: 11.6rem;
+    padding: 1.2rem;
+    background: #c0c0c0;
+    border: 0.2rem outset #fff;
+    color: #111;
+    font-size: 1.2rem;
+    pointer-events: auto;
+}

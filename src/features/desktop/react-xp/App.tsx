@@ -5,14 +5,19 @@ import TaskBar from "./components/TaskBar/TaskBar";
 import Wallpaper from "./components/Wallpaper/Wallpaper";
 import WindowManagement from "./components/WindowManagement/WindowManagement";
 import { useContext } from "./context/context";
-import type { MessengerTaskbarItem } from "./context/types";
+import type { MessengerTaskbarItem, OverlayTaskbarItem } from "./context/types";
 import { MsnMessengerApp } from "@/features/messenger/msn/MsnMessengerApp";
+import { WinampApp } from "@/features/winamp/WinampApp";
 
 function App() {
-    const {windowsInitiationState, isInitialBoot, initiationStage, isMessengerOpen, dispatch} = useContext();
+    const {windowsInitiationState, isInitialBoot, initiationStage, isMessengerOpen, isWinampOpen, dispatch} = useContext();
 
     const handleMessengerTaskbarItemsChange = useCallback((items: MessengerTaskbarItem[]) => {
         dispatch({ type: "SET_MESSENGER_TASKBAR_ITEMS", payload: items });
+    }, [dispatch]);
+
+    const handleWinampTaskbarItemChange = useCallback((item: OverlayTaskbarItem | null) => {
+        dispatch({ type: "SET_WINAMP_TASKBAR_ITEM", payload: item });
     }, [dispatch]);
 
     useEffect(() => {
@@ -51,6 +56,15 @@ function App() {
                         dispatch({ type: "SET_IS_MESSENGER_OPEN", payload: false });
                     }}
                     onTaskbarItemsChange={handleMessengerTaskbarItemsChange}
+                />
+            )}
+            {initiationStage > 0 && isWinampOpen && (
+                <WinampApp
+                    onClose={() => {
+                        dispatch({ type: "SET_WINAMP_TASKBAR_ITEM", payload: null });
+                        dispatch({ type: "SET_IS_WINAMP_OPEN", payload: false });
+                    }}
+                    onTaskbarItemChange={handleWinampTaskbarItemChange}
                 />
             )}
         </>
