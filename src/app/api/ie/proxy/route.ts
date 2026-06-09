@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const REQUEST_TIMEOUT_MS = 12_000;
 const MAX_HTML_BYTES = 2_000_000;
+const MODERN_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
 const isPrivateIp = (address: string) => {
     if (address === "::1") return true;
@@ -106,7 +107,7 @@ export async function GET(request: NextRequest) {
             headers: {
                 "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                 "accept-language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-                "user-agent": "Mozilla/5.0 (Windows NT 5.1; rv:45.0) Gecko/20100101 Firefox/45.0",
+                "user-agent": MODERN_USER_AGENT,
             },
             redirect: "follow",
             signal: controller.signal,
