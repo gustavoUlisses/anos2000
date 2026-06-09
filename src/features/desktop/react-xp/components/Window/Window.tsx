@@ -77,14 +77,25 @@ const Window = ({ ...props }: WindowProps) => {
     };
 
     const onTitleBarPointerDown = (event: React.PointerEvent<HTMLElement>) => {
+        if ((event.target as HTMLElement).closest("button")) return;
+
         const activeWindow = activeWindowRef.current;
         const activeWindowRect = activeWindow?.getBoundingClientRect();
         if (!activeWindowRect) return;
         
         const windowOffsetX = event.clientX - activeWindowRect.left;
         const windowOffsetY = event.clientY - activeWindowRect.top;
+
+        let nextLeft = activeWindowRect.left;
+        let nextTop = activeWindowRect.top;
+        let animationFrame = 0;
+
         if (activeWindow) {
             activeWindow.style.transition = "none";
+            activeWindow.style.left = `${activeWindowRect.left}px`;
+            activeWindow.style.top = `${activeWindowRect.top}px`;
+            activeWindow.style.removeProperty("right");
+            activeWindow.style.removeProperty("bottom");
 
             const iframe = activeWindow.querySelector("iframe");
             if (iframe) iframe.style.pointerEvents = "none";
@@ -93,24 +104,37 @@ const Window = ({ ...props }: WindowProps) => {
         const onPointerMove = (event: PointerEvent) => {
             if (isMaximized || event.clientY <= 0 || event.clientY > window.innerHeight - taskBarHeight) return;
 
-            setWindowPosition({ top: event.clientY - windowOffsetY, left: event.clientX - windowOffsetX, right: undefined, bottom: undefined });
+            nextLeft = event.clientX - windowOffsetX;
+            nextTop = event.clientY - windowOffsetY;
             document.body.style.userSelect = "none";
+
+            if (animationFrame) return;
+            animationFrame = requestAnimationFrame(() => {
+                animationFrame = 0;
+                if (!activeWindow) return;
+                activeWindow.style.left = `${nextLeft}px`;
+                activeWindow.style.top = `${nextTop}px`;
+            });
         };
-        const onThrottledPointerMove = throttle(onPointerMove, THROTTLE_DELAY);
 
         const onPointerUp = () => {
-            window.removeEventListener("pointermove", onThrottledPointerMove);
+            window.removeEventListener("pointermove", onPointerMove);
             window.removeEventListener("pointerup", onPointerUp);
+            if (animationFrame) cancelAnimationFrame(animationFrame);
             document.body.style.userSelect = "";
             if (activeWindow) {
+                activeWindow.style.left = `${nextLeft}px`;
+                activeWindow.style.top = `${nextTop}px`;
                 activeWindow.style.removeProperty("transition");
 
                 const iframe = activeWindow.querySelector("iframe");
                 if (iframe) iframe.style.removeProperty("pointer-events");
             }
 
+            setWindowPosition({ top: nextTop, left: nextLeft, right: undefined, bottom: undefined });
+
         };
-        window.addEventListener("pointermove", onThrottledPointerMove);
+        window.addEventListener("pointermove", onPointerMove);
         window.addEventListener("pointerup", onPointerUp);
     };
 
