@@ -37,6 +37,12 @@ export function WinampApp({ onClose, onTaskbarItemChange }: WinampAppProps) {
     useEffect(() => () => onTaskbarItemChange(null), [onTaskbarItemChange]);
 
     useEffect(() => {
+        document.body.classList.toggle("anos2000-winamp-minimized", isMinimized);
+
+        return () => document.body.classList.remove("anos2000-winamp-minimized");
+    }, [isMinimized]);
+
+    useEffect(() => {
         const handleTaskbarClick = () => {
             setIsMinimized((current) => !current);
         };

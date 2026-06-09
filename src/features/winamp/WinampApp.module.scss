@@ -9,9 +9,21 @@
     }
 
     &[data-minimized="true"] {
-        visibility: hidden;
+        opacity: 0;
         pointer-events: none;
+
+        :global(#webamp) {
+            pointer-events: none;
+            transform: translate3d(-200vw, -200vh, 0) !important;
+        }
     }
+}
+
+:global(body.anos2000-winamp-minimized input#position[title="Seeking Bar"]) {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translate3d(-200vw, -200vh, 0) !important;
+    visibility: hidden !important;
 }
 
 .fallback {
