@@ -12,8 +12,11 @@ interface WindowProps extends currentWindow {
 }
 
 const THROTTLE_DELAY = 50;
-const taskBarHeight = document.querySelector("[data-label=taskbar]")?.getBoundingClientRect().height || 0;
 const applications = applicationsJSON as unknown as Record<string, Application>;
+
+const getTaskBarHeight = () => (
+    document.querySelector("[data-label=taskbar]")?.getBoundingClientRect().height || 0
+);
 
 const Window = ({ ...props }: WindowProps) => {
     const { id, appId, children, active = false, hidden = false } = props;
@@ -39,7 +42,7 @@ const Window = ({ ...props }: WindowProps) => {
         activeWindow?.style?.left === "0px"
         && activeWindow?.style?.top === "0px"
         && activeWindow?.style?.width === "100%"
-        && activeWindow?.style?.height === (window.innerHeight - taskBarHeight) + "px"
+        && activeWindow?.style?.height === (window.innerHeight - getTaskBarHeight()) + "px"
     );
 
     useEffect(() => {
@@ -51,10 +54,16 @@ const Window = ({ ...props }: WindowProps) => {
 
     useEffect(() => {
         const onResize = () => {
+            if (isMaximized && activeWindowRef.current) {
+                activeWindowRef.current.style.height = `${window.innerHeight - getTaskBarHeight()}px`;
+                return;
+            }
+
             setWindowSize((prev) => [Math.min(width, width - offset), prev[1]]);
         };
         window.addEventListener("resize", onResize);
-    }, [offset, width]);
+        return () => window.removeEventListener("resize", onResize);
+    }, [isMaximized, offset, width]);
 
     const toggleMaximizeWindow = (activeWindow: HTMLElement | null) => {
         if (!maximizable) return;
@@ -73,7 +82,7 @@ const Window = ({ ...props }: WindowProps) => {
         activeWindow.style.left = (isMaximized) ? unmaximizedValues.left : "0px";
         activeWindow.style.top = (isMaximized) ? unmaximizedValues.top : "0px";
         activeWindow.style.width = (isMaximized) ? unmaximizedValues.width : "100%";
-        activeWindow.style.height = (isMaximized) ? unmaximizedValues.height : window.innerHeight - taskBarHeight + "px";
+        activeWindow.style.height = (isMaximized) ? unmaximizedValues.height : window.innerHeight - getTaskBarHeight() + "px";
     };
 
     const onTitleBarPointerDown = (event: React.PointerEvent<HTMLElement>) => {
@@ -102,7 +111,7 @@ const Window = ({ ...props }: WindowProps) => {
         }
 
         const onPointerMove = (event: PointerEvent) => {
-            if (isMaximized || event.clientY <= 0 || event.clientY > window.innerHeight - taskBarHeight) return;
+            if (isMaximized || event.clientY <= 0 || event.clientY > window.innerHeight - getTaskBarHeight()) return;
 
             nextLeft = event.clientX - windowOffsetX;
             nextTop = event.clientY - windowOffsetY;
