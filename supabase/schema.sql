@@ -35,27 +35,32 @@ alter table public.profiles enable row level security;
 alter table public.chat_messages enable row level security;
 alter table public.msn_blocks enable row level security;
 
+drop policy if exists "profiles are readable" on public.profiles;
 create policy "profiles are readable"
 on public.profiles
 for select
 using (true);
 
+drop policy if exists "anonymous users can create non-admin profiles" on public.profiles;
 create policy "anonymous users can create non-admin profiles"
 on public.profiles
 for insert
 with check (is_admin = false and lower(nick) <> 'gusdev');
 
+drop policy if exists "anonymous users can update their last seen profile data" on public.profiles;
 create policy "anonymous users can update their last seen profile data"
 on public.profiles
 for update
 using (is_admin = false and lower(nick) <> 'gusdev')
 with check (is_admin = false and lower(nick) <> 'gusdev');
 
+drop policy if exists "messages are readable for realtime MVP" on public.chat_messages;
 create policy "messages are readable for realtime MVP"
 on public.chat_messages
 for select
 using (true);
 
+drop policy if exists "anonymous users can send messages" on public.chat_messages;
 create policy "anonymous users can send messages"
 on public.chat_messages
 for insert
