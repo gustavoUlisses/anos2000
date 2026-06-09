@@ -57,13 +57,6 @@
             }
         ],
         [
-            "gunbound",
-            {
-                "top": 595,
-                "left": 5
-            }
-        ],
-        [
             "recycleBin",
             {
                 "bottom": 5,

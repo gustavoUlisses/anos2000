@@ -95,18 +95,6 @@
         "top": 35,
         "left": 130
     },
-    "gunbound": {
-        "title": "Gunbound",
-        "icon": "/apps/gunbound/gunbound.png",
-        "iconLarge": "/apps/gunbound/gunbound.png",
-        "component": "WebEmbed",
-        "disableSandbox": true,
-        "embedUrl": "https://dragonbound.net/",
-        "height": 640,
-        "width": 960,
-        "top": 35,
-        "left": 130
-    },
     "recentDocuments": {
         "title": "My Recent Documents",
         "iconLarge": "/icon__recent_documents--large.png",
