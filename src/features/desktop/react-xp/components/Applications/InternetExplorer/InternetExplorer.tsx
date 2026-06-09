@@ -9,6 +9,7 @@ import type { Application } from "../../../context/types";
 const Applications = applicationsJSON as unknown as Record<string, Application>;
 const IE_HOME_URL = "anos2000://home";
 const WAYBACK_TIMESTAMP = "20080601000000id_";
+const DIRECT_ALLOWED_URLS = ["https://yorgute.com/inicio"];
 
 const IE_FAVORITES = [
     { label: "Colheita Feliz", url: "https://fazendadossonhos.app/" },
@@ -27,34 +28,30 @@ const normalizeUrl = (inputValue: string) => {
     return `https://${trimmed}`;
 };
 
-const isWaybackExempt = (url: string) => {
+const isDirectAllowed = (url: string) => {
     const normalized = normalizeUrl(url).replace(/\/$/, "");
 
-    return IE_FAVORITES.some((favorite) => {
-        const favoriteUrl = normalizeUrl(favorite.url).replace(/\/$/, "");
-        return normalized === favoriteUrl || normalized.startsWith(favoriteUrl);
+    return DIRECT_ALLOWED_URLS.some((allowedUrl) => {
+        const normalizedAllowedUrl = normalizeUrl(allowedUrl).replace(/\/$/, "");
+        return normalized === normalizedAllowedUrl || normalized.startsWith(normalizedAllowedUrl);
     });
 };
 
-const getIframeSrc = (inputValue: string, timeTravelEnabled: boolean) => {
+const getIframeSrc = (inputValue: string) => {
     const value = normalizeUrl(inputValue);
-    const shouldUseWayback = timeTravelEnabled && value !== "about:blank" && value !== IE_HOME_URL && !isWaybackExempt(value);
+    const shouldUseWayback = value !== "about:blank" && value !== IE_HOME_URL && !isDirectAllowed(value);
     const url = shouldUseWayback ? `https://web.archive.org/web/${WAYBACK_TIMESTAMP}/${value}` : value;
-    const proxyUrl = value !== "about:blank" && value !== IE_HOME_URL && !shouldUseWayback
-        ? `/api/ie/proxy?url=${encodeURIComponent(value)}`
-        : url;
 
-    return { url: proxyUrl, value };
+    return { url, value };
 };
 
 const InternetExplorer = ({ appId }: Record<string, string>) => {
     const { currentWindows, dispatch } = useContext();
     const [isBackDisabled, setIsBackDisabled] = useState(true);
     const [isForwardDisabled, setIsForwardDisabled] = useState(true);
-    const [timeTravelEnabled, setTimeTravelEnabled] = useState(false);
     const { currentWindow, updatedCurrentWindows } = getCurrentWindow(currentWindows);
     const HOMEPAGE = currentWindow?.landingUrl || IE_HOME_URL;
-    const [iframeSrc, setIframeSrc] = useState(() => getIframeSrc(HOMEPAGE, false).url);
+    const [iframeSrc, setIframeSrc] = useState(() => getIframeSrc(HOMEPAGE).url);
     const [isHomeVisible, setIsHomeVisible] = useState(HOMEPAGE === IE_HOME_URL);
 
     const inputFieldRef = useRef<HTMLInputElement | null>(null);
@@ -69,8 +66,8 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
 
     const appData = Applications[appId];
 
-    const updateIframe = (inputValue = inputFieldRef.current?.value || HOMEPAGE, useTimeTravel = timeTravelEnabled) => {
-        const { url, value } = getIframeSrc(inputValue, useTimeTravel);
+    const updateIframe = (inputValue = inputFieldRef.current?.value || HOMEPAGE) => {
+        const { url, value } = getIframeSrc(inputValue);
         setIsHomeVisible(value === IE_HOME_URL);
         setIframeSrc(url);
     };
@@ -142,12 +139,6 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
         navigateTo(url);
     };
 
-    const timeTravelClickHandler = () => {
-        const nextTimeTravelEnabled = !timeTravelEnabled;
-        setTimeTravelEnabled(nextTimeTravelEnabled);
-        updateIframe(currentUrl.current, nextTimeTravelEnabled);
-    };
-
     return (
         <>
             <div className={styles.menusContainer}>
@@ -187,7 +178,7 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
                                 <img className="mr-2" src="/icon__favourites--large.png" width="20" height="20" />
                                 <h4>Favourites</h4>
                             </button>
-                            <button className="flex items-center m-0.5" onClick={timeTravelClickHandler} data-selected={timeTravelEnabled}>
+                            <button className="flex items-center m-0.5 cursor-default" data-selected={true}>
                                 <img className="mr-2" src="/icon__history--large.png" width="20" height="20" />
                                 <h4>Anos 2000</h4>
                             </button>
@@ -250,14 +241,13 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
                         height="100%"
                         allow="autoplay; fullscreen; clipboard-read; clipboard-write; encrypted-media; gamepad; pointer-lock"
                         referrerPolicy="no-referrer-when-downgrade"
-                        sandbox="allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups allow-scripts"
                     />
                 )}
             </main >
             <div className={`${styles.statusBar} flex justify-between px-2 py-0.5`}>
                 <div className="flex items-center gap-1">
                     <img src="icon__internet_explorer.png" height="12" width="12" />
-                    <p>{timeTravelEnabled ? "Wayback mode enabled" : "Done"}</p>
+                    <p>Wayback 2008 ativo</p>
                 </div>
                 <div className="flex">
                     <div className="flex items-center">
