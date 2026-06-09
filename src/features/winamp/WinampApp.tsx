@@ -32,9 +32,9 @@ export function WinampApp({ onClose, onTaskbarItemChange }: WinampAppProps) {
 
     useEffect(() => {
         onTaskbarItemChange(taskbarItem);
-
-        return () => onTaskbarItemChange(null);
     }, [onTaskbarItemChange, taskbarItem]);
+
+    useEffect(() => () => onTaskbarItemChange(null), [onTaskbarItemChange]);
 
     useEffect(() => {
         const handleTaskbarClick = () => {

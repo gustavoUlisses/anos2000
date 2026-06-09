@@ -16,8 +16,18 @@ function App() {
         dispatch({ type: "SET_MESSENGER_TASKBAR_ITEMS", payload: items });
     }, [dispatch]);
 
+    const handleMessengerClose = useCallback(() => {
+        dispatch({ type: "SET_MESSENGER_TASKBAR_ITEMS", payload: [] });
+        dispatch({ type: "SET_IS_MESSENGER_OPEN", payload: false });
+    }, [dispatch]);
+
     const handleWinampTaskbarItemChange = useCallback((item: OverlayTaskbarItem | null) => {
         dispatch({ type: "SET_WINAMP_TASKBAR_ITEM", payload: item });
+    }, [dispatch]);
+
+    const handleWinampClose = useCallback(() => {
+        dispatch({ type: "SET_WINAMP_TASKBAR_ITEM", payload: null });
+        dispatch({ type: "SET_IS_WINAMP_OPEN", payload: false });
     }, [dispatch]);
 
     useEffect(() => {
@@ -51,19 +61,13 @@ function App() {
             </Activity>
             {initiationStage > 0 && isMessengerOpen && (
                 <MsnMessengerApp
-                    onClose={() => {
-                        dispatch({ type: "SET_MESSENGER_TASKBAR_ITEMS", payload: [] });
-                        dispatch({ type: "SET_IS_MESSENGER_OPEN", payload: false });
-                    }}
+                    onClose={handleMessengerClose}
                     onTaskbarItemsChange={handleMessengerTaskbarItemsChange}
                 />
             )}
             {initiationStage > 0 && isWinampOpen && (
                 <WinampApp
-                    onClose={() => {
-                        dispatch({ type: "SET_WINAMP_TASKBAR_ITEM", payload: null });
-                        dispatch({ type: "SET_IS_WINAMP_OPEN", payload: false });
-                    }}
+                    onClose={handleWinampClose}
                     onTaskbarItemChange={handleWinampTaskbarItemChange}
                 />
             )}
