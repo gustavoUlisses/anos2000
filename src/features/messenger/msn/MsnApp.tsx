@@ -509,7 +509,7 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
                 </button>
               </div>
               <div className="msn-online-toast-body">
-                <div className="msn-online-toast-avatar">
+                <div className="msn-avatar-frame msn-online-toast-avatar">
                   <img src={notification.contact.avatar} alt="" />
                 </div>
                 <div className="msn-online-toast-copy">

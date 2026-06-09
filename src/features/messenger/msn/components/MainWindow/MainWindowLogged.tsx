@@ -52,7 +52,9 @@ export function MainWindowLogged({
         <div className="logged-window-header p-1 my-2 position-relative">
           <div className="row g-0 align-items-center">
             <div className="col-auto">
-              <img src="/msn/images/user.png" alt="User profile" width="65" className="border border-2 border-white" />
+              <div className="msn-avatar-frame msn-avatar-frame-main">
+                <img src="/msn/images/user.png" alt="User profile" />
+              </div>
             </div>
             <div className="col d-flex flex-column ps-2">
               <span className="fw-bold">{profile.nick}</span>

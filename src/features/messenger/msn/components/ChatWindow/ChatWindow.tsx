@@ -319,11 +319,15 @@ export function ChatWindow({
             </div>
           </div>
           <div className="col-auto d-flex flex-column justify-content-between">
-            <div className="p-lg-2 p-1 bg-white">
-              <img src={contact.avatar} alt="User profile" width="100" className="user-profile-pic border border-2 border-white" />
+            <div className="p-lg-2 p-1">
+              <div className="msn-avatar-frame msn-avatar-frame-chat">
+                <img src={contact.avatar} alt="User profile" className="user-profile-pic" />
+              </div>
             </div>
-            <div className="p-lg-2 p-1 bg-white">
-              <img src="/msn/images/user.png" alt="User profile" width="100" className="user-profile-pic border border-2 border-white" />
+            <div className="p-lg-2 p-1">
+              <div className="msn-avatar-frame msn-avatar-frame-chat">
+                <img src="/msn/images/user.png" alt="User profile" className="user-profile-pic" />
+              </div>
             </div>
           </div>
         </div>

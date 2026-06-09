@@ -35,7 +35,9 @@ export function MainWindowNotLogged({ handleLogin }: MainWindowNotLoggedProps) {
       <div className="d-flex flex-column justify-content-between">
         <div>
           <div className="d-flex justify-content-center my-5">
-            <img src="/msn/images/user.png" alt="User" className="border border-2 border-white" width="130" />
+            <div className="msn-avatar-frame msn-avatar-frame-login">
+              <img src="/msn/images/user.png" alt="User" />
+            </div>
           </div>
           <form
             className="px-4"
