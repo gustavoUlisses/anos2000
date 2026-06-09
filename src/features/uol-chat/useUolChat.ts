@@ -193,6 +193,7 @@ async function persistLogout(profileId: string) {
   await fetch("/api/uol/session", {
     body: JSON.stringify({ clientId: profileId }),
     headers: { "Content-Type": "application/json" },
+    keepalive: true,
     method: "DELETE",
   }).catch(() => undefined);
 }
@@ -233,6 +234,7 @@ export function useUolChat() {
   useEffect(() => {
     if (!profile) return;
 
+    const activeProfile = profile;
     let isActive = true;
 
     void fetchHistory().then((history) => {
@@ -243,6 +245,8 @@ export function useUolChat() {
 
     return () => {
       isActive = false;
+      clearStoredSession();
+      void persistLogout(activeProfile.id);
     };
   }, [profile]);
 
@@ -298,6 +302,7 @@ export function useUolChat() {
       void announceOffline(channel, activeProfile);
       void channel.untrack();
       void persistLogout(activeProfile.id);
+      clearStoredSession();
     }
 
     window.addEventListener("beforeunload", untrackPresence);
@@ -311,6 +316,7 @@ export function useUolChat() {
       void announceOffline(channel, activeProfile);
       void channel.untrack();
       void persistLogout(activeProfile.id);
+      clearStoredSession();
       void supabase.removeChannel(channel);
     };
   }, [profile, supabase]);
