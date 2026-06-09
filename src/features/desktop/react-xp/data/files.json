@@ -29,6 +29,13 @@
             }
         ],
         [
+            "ragnarok",
+            {
+                "top": 295,
+                "left": 5
+            }
+        ],
+        [
             "recycleBin",
             {
                 "bottom": 5,

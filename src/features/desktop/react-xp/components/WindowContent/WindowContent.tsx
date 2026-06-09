@@ -13,6 +13,7 @@ const windowRegistry: Record<string, () => Promise<{ default: React.ComponentTyp
     FileExplorer: () => import("../Applications/FileExplorer/FileExplorer"),
     InternetExplorer: () => import("../Applications/InternetExplorer/InternetExplorer"),
     Notepad: () => import("../Applications/Notepad/Notepad"),
+    Ragnarok: () => import("../Applications/Ragnarok/Ragnarok"),
     Run: () => import("../Applications/Run/Run"),
     Settings: () => import("../Applications/Settings/Settings"),
 };
