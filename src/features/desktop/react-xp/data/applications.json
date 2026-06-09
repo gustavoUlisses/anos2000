@@ -84,6 +84,28 @@
         "top": 40,
         "left": 160
     },
+    "diablo": {
+        "title": "Diablo",
+        "icon": "/apps/diablo/diablo.png",
+        "iconLarge": "/apps/diablo/diablo.png",
+        "component": "WebEmbed",
+        "embedUrl": "https://d07riv.github.io/diabloweb/",
+        "height": 640,
+        "width": 960,
+        "top": 35,
+        "left": 130
+    },
+    "gunbound": {
+        "title": "Gunbound",
+        "icon": "/apps/gunbound/gunbound.png",
+        "iconLarge": "/apps/gunbound/gunbound.png",
+        "component": "WebEmbed",
+        "embedUrl": "https://legendarybound.com/",
+        "height": 640,
+        "width": 960,
+        "top": 35,
+        "left": 130
+    },
     "recentDocuments": {
         "title": "My Recent Documents",
         "iconLarge": "/icon__recent_documents--large.png",

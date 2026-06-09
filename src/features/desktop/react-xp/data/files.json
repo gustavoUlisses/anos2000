@@ -50,6 +50,20 @@
             }
         ],
         [
+            "diablo",
+            {
+                "top": 520,
+                "left": 5
+            }
+        ],
+        [
+            "gunbound",
+            {
+                "top": 595,
+                "left": 5
+            }
+        ],
+        [
             "recycleBin",
             {
                 "bottom": 5,
