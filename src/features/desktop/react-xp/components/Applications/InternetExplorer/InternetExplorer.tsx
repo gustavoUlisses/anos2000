@@ -7,8 +7,9 @@ import styles from "./InternetExplorer.module.scss";
 import type { Application } from "../../../context/types";
 
 const Applications = applicationsJSON as unknown as Record<string, Application>;
-const IE_HOME_URL = "anos2000://home";
-const WAYBACK_TIMESTAMP = "20110601000000id_";
+const IE_HOME_URL = "about:blank";
+const DEFAULT_WAYBACK_YEAR = 2011;
+const WAYBACK_YEARS = Array.from({ length: 21 }, (_, index) => 2000 + index);
 const DIRECT_ALLOWED_URLS = ["https://yorgute.com/inicio"];
 
 const IE_FAVORITES = [
@@ -31,10 +32,11 @@ const isDirectAllowed = (url: string) => {
     });
 };
 
-const getIframeSrc = (inputValue: string) => {
+const getIframeSrc = (inputValue: string, waybackYear: number) => {
     const value = normalizeUrl(inputValue);
     const shouldUseWayback = value !== "about:blank" && value !== IE_HOME_URL && !isDirectAllowed(value);
-    const url = shouldUseWayback ? `https://web.archive.org/web/${WAYBACK_TIMESTAMP}/${value}` : value;
+    const timestamp = `${waybackYear}0601000000id_`;
+    const url = shouldUseWayback ? `https://web.archive.org/web/${timestamp}/${value}` : value;
 
     return { url, value };
 };
@@ -43,10 +45,11 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
     const { currentWindows, dispatch } = useContext();
     const [isBackDisabled, setIsBackDisabled] = useState(true);
     const [isForwardDisabled, setIsForwardDisabled] = useState(true);
+    const [selectedYear, setSelectedYear] = useState(DEFAULT_WAYBACK_YEAR);
+    const [isYearMenuOpen, setIsYearMenuOpen] = useState(false);
     const { currentWindow, updatedCurrentWindows } = getCurrentWindow(currentWindows);
     const HOMEPAGE = currentWindow?.landingUrl || IE_HOME_URL;
-    const [iframeSrc, setIframeSrc] = useState(() => getIframeSrc(HOMEPAGE).url);
-    const [isHomeVisible, setIsHomeVisible] = useState(HOMEPAGE === IE_HOME_URL);
+    const [iframeSrc, setIframeSrc] = useState(() => getIframeSrc(HOMEPAGE, DEFAULT_WAYBACK_YEAR).url);
 
     const inputFieldRef = useRef<HTMLInputElement | null>(null);
     const currentUrl = useRef<string>(HOMEPAGE);
@@ -60,9 +63,8 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
 
     const appData = Applications[appId];
 
-    const updateIframe = (inputValue = inputFieldRef.current?.value || HOMEPAGE) => {
-        const { url, value } = getIframeSrc(inputValue);
-        setIsHomeVisible(value === IE_HOME_URL);
+    const updateIframe = (inputValue = inputFieldRef.current?.value || HOMEPAGE, waybackYear = selectedYear) => {
+        const { url } = getIframeSrc(inputValue, waybackYear);
         setIframeSrc(url);
     };
 
@@ -117,7 +119,6 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
     };
 
     const stopClickHandler = () => {
-        setIsHomeVisible(false);
         setIframeSrc("about:blank");
     };
 
@@ -131,6 +132,12 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
 
     const favoriteClickHandler = (url: string) => {
         navigateTo(url);
+    };
+
+    const yearClickHandler = (year: number) => {
+        setSelectedYear(year);
+        setIsYearMenuOpen(false);
+        updateIframe(currentUrl.current, year);
     };
 
     return (
@@ -172,10 +179,22 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
                                 <img className="mr-2" src="/icon__favourites--large.png" width="20" height="20" />
                                 <h4>Favourites</h4>
                             </button>
-                            <button className="flex items-center m-0.5 cursor-default" data-selected={true}>
-                                <img className="mr-2" src="/icon__history--large.png" width="20" height="20" />
-                                <h4>Anos 2000</h4>
-                            </button>
+                            <span className={styles.timeTravelPicker}>
+                                <button className="flex items-center m-0.5" type="button" data-selected={true} onClick={() => setIsYearMenuOpen((isOpen) => !isOpen)}>
+                                    <img className="mr-2" src="/icon__history--large.png" width="20" height="20" />
+                                    <h4>Anos 2000</h4>
+                                    <span className="h-full"><span className={styles.dropdown}>v</span></span>
+                                </button>
+                                {isYearMenuOpen && (
+                                    <span className={styles.yearMenu}>
+                                        {WAYBACK_YEARS.map((year) => (
+                                            <button key={year} type="button" data-selected={selectedYear === year} onClick={() => yearClickHandler(year)}>
+                                                {year}
+                                            </button>
+                                        ))}
+                                    </span>
+                                )}
+                            </span>
                         </div>
                         <div className="flex shrink-0">
                             <button className="flex items-center m-0.5 cursor-not-allowed">
@@ -214,34 +233,18 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
                 </section>
             </div>
             <main className={`${styles.mainContent} h-full flex overflow-auto`}>
-                {isHomeVisible && (
-                    <section className={styles.homePage}>
-                        <img src="/icon__internet_explorer--large.png" alt="" width="64" height="64" />
-                        <h2>Internet Explorer</h2>
-                        <p>Digite um endereco ou escolha um favorito.</p>
-                        <div>
-                            {IE_FAVORITES.map((favorite) => (
-                                <button key={favorite.url} type="button" onClick={() => favoriteClickHandler(favorite.url)}>
-                                    {favorite.label}
-                                </button>
-                            ))}
-                        </div>
-                    </section>
-                )}
-                {!isHomeVisible && (
-                    <iframe
-                        src={iframeSrc}
-                        width="100%"
-                        height="100%"
-                        allow="autoplay; fullscreen; clipboard-read; clipboard-write; encrypted-media; gamepad; pointer-lock"
-                        referrerPolicy="no-referrer-when-downgrade"
-                    />
-                )}
+                <iframe
+                    src={iframeSrc}
+                    width="100%"
+                    height="100%"
+                    allow="autoplay; fullscreen; clipboard-read; clipboard-write; encrypted-media; gamepad; pointer-lock"
+                    referrerPolicy="no-referrer-when-downgrade"
+                />
             </main >
             <div className={`${styles.statusBar} flex justify-between px-2 py-0.5`}>
                 <div className="flex items-center gap-1">
                     <img src="icon__internet_explorer.png" height="12" width="12" />
-                    <p>Wayback 2011 ativo</p>
+                    <p>Wayback {selectedYear} ativo</p>
                 </div>
                 <div className="flex">
                     <div className="flex items-center">
