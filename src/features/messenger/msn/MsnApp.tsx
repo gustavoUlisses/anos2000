@@ -102,6 +102,14 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
     )));
   }
 
+  function clearChatNudgeSignal(contactId: string) {
+    setOpenChats((current) => current.map((chat) => (
+      chat.contact.id === contactId && chat.nudgeSignal !== 0
+        ? { ...chat, nudgeSignal: 0 }
+        : chat
+    )));
+  }
+
   function logout() {
     setOpenChats([]);
     setIsLoginMinimized(false);
@@ -444,6 +452,7 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
                 nudgeSignal={chat.nudgeSignal}
                 onClose={() => closeChatWindow(chat.contact.id)}
                 onMinimize={() => minimizeChat(chat.contact.id)}
+                onNudgePlayed={() => clearChatNudgeSignal(chat.contact.id)}
                 onSendNudge={() => {
                   if (!contactOnline) {
                     return false;

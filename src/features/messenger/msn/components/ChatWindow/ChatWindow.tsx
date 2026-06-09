@@ -12,6 +12,7 @@ type ChatWindowProps = {
   nudgeSignal: number;
   onClose: () => void;
   onMinimize: () => void;
+  onNudgePlayed: () => void;
   onSendNudge: () => boolean;
   onSendMessage: (parts: MsnChatPart[]) => void;
 };
@@ -24,6 +25,7 @@ export function ChatWindow({
   nudgeSignal,
   onClose,
   onMinimize,
+  onNudgePlayed,
   onSendNudge,
   onSendMessage,
 }: ChatWindowProps) {
@@ -71,7 +73,8 @@ export function ChatWindow({
     }
 
     playTiltSound();
-  }, [nudgeSignal, playTiltSound]);
+    onNudgePlayed();
+  }, [nudgeSignal, onNudgePlayed, playTiltSound]);
 
   function sendNudge() {
     if (!isContactOnline) {
