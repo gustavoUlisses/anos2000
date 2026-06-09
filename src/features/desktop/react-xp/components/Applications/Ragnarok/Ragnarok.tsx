@@ -1,16 +1,22 @@
 import styles from "./Ragnarok.module.scss";
 
+const RAGNAROK_URL = "https://maeloro.com/";
+
 const Ragnarok = () => {
+    const openRagnarok = () => {
+        window.open(RAGNAROK_URL, "_blank", "noopener,noreferrer");
+    };
+
     return (
         <main className={styles.ragnarokApp}>
-            <iframe
-                className={styles.frame}
-                src="https://maeloro.com/"
-                title="Ragnarok"
-                allow="autoplay; fullscreen; clipboard-read; clipboard-write; encrypted-media; gamepad; pointer-lock"
-                sandbox="allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
-                referrerPolicy="no-referrer-when-downgrade"
-            />
+            <section className={styles.launcher}>
+                <img src="/ragnarok/ragnarok.jfif" alt="" width="96" height="96" />
+                <div>
+                    <h2>Ragnarok Online</h2>
+                    <p>maeloro.com nao permite abrir dentro da janela.</p>
+                    <button type="button" onClick={openRagnarok}>Jogar</button>
+                </div>
+            </section>
         </main>
     );
 };
