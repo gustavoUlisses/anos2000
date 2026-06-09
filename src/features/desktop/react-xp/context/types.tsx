@@ -46,6 +46,7 @@ export interface Application {
     iconLarge?: string;
     content: ReactNode | string;
     component?: string | undefined;
+    embedUrl?: string;
     link?: string;
     disabled?: boolean;
     redirect?: string;

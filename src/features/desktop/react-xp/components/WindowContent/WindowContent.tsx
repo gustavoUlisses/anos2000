@@ -16,6 +16,7 @@ const windowRegistry: Record<string, () => Promise<{ default: React.ComponentTyp
     Ragnarok: () => import("../Applications/Ragnarok/Ragnarok"),
     Run: () => import("../Applications/Run/Run"),
     Settings: () => import("../Applications/Settings/Settings"),
+    WebEmbed: () => import("../Applications/WebEmbed/WebEmbed"),
 };
 
 export const WindowContent = ({ componentId, ...props }: WindowContentProps) => {

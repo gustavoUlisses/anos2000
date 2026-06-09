@@ -1,0 +1,23 @@
+.webEmbed {
+    height: 100%;
+    width: 100%;
+    background: #000;
+    overflow: hidden;
+}
+
+.frame {
+    display: block;
+    height: 100%;
+    width: 100%;
+    border: 0;
+    background: #000;
+}
+
+.fallback {
+    display: grid;
+    height: 100%;
+    place-items: center;
+    background: #ece9d8;
+    color: #111;
+    font-size: 1.2rem;
+}

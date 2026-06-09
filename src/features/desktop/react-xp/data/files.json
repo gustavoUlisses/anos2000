@@ -36,6 +36,27 @@
             }
         ],
         [
+            "tibia",
+            {
+                "top": 370,
+                "left": 5
+            }
+        ],
+        [
+            "counterStrike16",
+            {
+                "top": 445,
+                "left": 5
+            }
+        ],
+        [
+            "paint",
+            {
+                "top": 520,
+                "left": 5
+            }
+        ],
+        [
             "recycleBin",
             {
                 "bottom": 5,
