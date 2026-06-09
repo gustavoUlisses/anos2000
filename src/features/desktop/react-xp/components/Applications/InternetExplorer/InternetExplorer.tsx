@@ -40,8 +40,11 @@ const getIframeSrc = (inputValue: string, timeTravelEnabled: boolean) => {
     const value = normalizeUrl(inputValue);
     const shouldUseWayback = timeTravelEnabled && value !== "about:blank" && value !== IE_HOME_URL && !isWaybackExempt(value);
     const url = shouldUseWayback ? `https://web.archive.org/web/${WAYBACK_TIMESTAMP}/${value}` : value;
+    const proxyUrl = value !== "about:blank" && value !== IE_HOME_URL && !shouldUseWayback
+        ? `/api/ie/proxy?url=${encodeURIComponent(value)}`
+        : url;
 
-    return { url, value };
+    return { url: proxyUrl, value };
 };
 
 const InternetExplorer = ({ appId }: Record<string, string>) => {
@@ -247,6 +250,7 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
                         height="100%"
                         allow="autoplay; fullscreen; clipboard-read; clipboard-write; encrypted-media; gamepad; pointer-lock"
                         referrerPolicy="no-referrer-when-downgrade"
+                        sandbox="allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups allow-scripts"
                     />
                 )}
             </main >
