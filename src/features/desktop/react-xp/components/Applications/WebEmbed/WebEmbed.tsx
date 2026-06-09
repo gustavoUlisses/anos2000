@@ -22,7 +22,8 @@ const WebEmbed = ({ appId }: WebEmbedProps) => {
                 src={app.embedUrl}
                 title={app.title}
                 allow="autoplay; fullscreen; clipboard-read; clipboard-write; encrypted-media; gamepad; pointer-lock"
-                sandbox="allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
+                allowFullScreen
+                sandbox={app.disableSandbox ? undefined : "allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"}
                 referrerPolicy="no-referrer-when-downgrade"
             />
         </main>

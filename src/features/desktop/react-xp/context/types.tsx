@@ -46,6 +46,7 @@ export interface Application {
     iconLarge?: string;
     content: ReactNode | string;
     component?: string | undefined;
+    disableSandbox?: boolean;
     embedUrl?: string;
     landingUrl?: string;
     link?: string;
