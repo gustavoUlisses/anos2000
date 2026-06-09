@@ -7,7 +7,8 @@ import styles from "./InternetExplorer.module.scss";
 import type { Application } from "../../../context/types";
 
 const Applications = applicationsJSON as unknown as Record<string, Application>;
-const WAYBACK_TIMESTAMP = "20030612074004id_";
+const IE_HOME_URL = "anos2000://home";
+const WAYBACK_TIMESTAMP = "20080601000000id_";
 
 const IE_FAVORITES = [
     { label: "Colheita Feliz", url: "https://fazendadossonhos.app/" },
@@ -21,8 +22,8 @@ const IE_FAVORITES = [
 
 const normalizeUrl = (inputValue: string) => {
     const trimmed = inputValue.trim();
-    if (!trimmed) return "about:blank";
-    if (/^https?:\/\//i.test(trimmed) || trimmed === "about:blank") return trimmed;
+    if (!trimmed) return IE_HOME_URL;
+    if (/^https?:\/\//i.test(trimmed) || trimmed === "about:blank" || trimmed === IE_HOME_URL) return trimmed;
     return `https://${trimmed}`;
 };
 
@@ -37,7 +38,7 @@ const isWaybackExempt = (url: string) => {
 
 const getIframeSrc = (inputValue: string, timeTravelEnabled: boolean) => {
     const value = normalizeUrl(inputValue);
-    const shouldUseWayback = timeTravelEnabled && value !== "about:blank" && !isWaybackExempt(value);
+    const shouldUseWayback = timeTravelEnabled && value !== "about:blank" && value !== IE_HOME_URL && !isWaybackExempt(value);
     const url = shouldUseWayback ? `https://web.archive.org/web/${WAYBACK_TIMESTAMP}/${value}` : value;
 
     return { url, value };
@@ -49,8 +50,9 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
     const [isForwardDisabled, setIsForwardDisabled] = useState(true);
     const [timeTravelEnabled, setTimeTravelEnabled] = useState(false);
     const { currentWindow, updatedCurrentWindows } = getCurrentWindow(currentWindows);
-    const HOMEPAGE = currentWindow?.landingUrl || "https://www.jamiepates.com";
+    const HOMEPAGE = currentWindow?.landingUrl || IE_HOME_URL;
     const [iframeSrc, setIframeSrc] = useState(() => getIframeSrc(HOMEPAGE, false).url);
+    const [isHomeVisible, setIsHomeVisible] = useState(HOMEPAGE === IE_HOME_URL);
 
     const inputFieldRef = useRef<HTMLInputElement | null>(null);
     const currentUrl = useRef<string>(HOMEPAGE);
@@ -65,7 +67,8 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
     const appData = Applications[appId];
 
     const updateIframe = (inputValue = inputFieldRef.current?.value || HOMEPAGE, useTimeTravel = timeTravelEnabled) => {
-        const { url } = getIframeSrc(inputValue, useTimeTravel);
+        const { url, value } = getIframeSrc(inputValue, useTimeTravel);
+        setIsHomeVisible(value === IE_HOME_URL);
         setIframeSrc(url);
     };
 
@@ -73,7 +76,7 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
         const nextValue = normalizeUrl(nextInputValue);
         const inputField = inputFieldRef.current;
 
-        if (inputField) inputField.value = nextValue;
+        if (inputField) inputField.value = nextValue === IE_HOME_URL ? "" : nextValue;
 
         if (addToHistory && currentWindow?.history && currentUrl.current !== nextValue) {
             if (currentUrl.current !== currentWindow.history.at(-1)) currentWindow.history.push(currentUrl.current);
@@ -92,7 +95,7 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
         const previousUrl = currentWindow.history.pop() || HOMEPAGE;
         const inputField = inputFieldRef.current;
         currentUrl.current = previousUrl;
-        if (inputField) inputField.value = previousUrl;
+        if (inputField) inputField.value = previousUrl === IE_HOME_URL ? "" : previousUrl;
         updateIframe(previousUrl);
         dispatch({ type: "SET_CURRENT_WINDOWS", payload: updatedCurrentWindows });
     };
@@ -104,7 +107,7 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
         const nextUrl = currentWindow.forward.pop() || HOMEPAGE;
         const inputField = inputFieldRef.current;
         currentUrl.current = nextUrl;
-        if (inputField) inputField.value = nextUrl;
+        if (inputField) inputField.value = nextUrl === IE_HOME_URL ? "" : nextUrl;
         updateIframe(nextUrl);
         dispatch({ type: "SET_CURRENT_WINDOWS", payload: updatedCurrentWindows });
     };
@@ -120,6 +123,7 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
     };
 
     const stopClickHandler = () => {
+        setIsHomeVisible(false);
         setIframeSrc("about:blank");
     };
 
@@ -203,7 +207,7 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
 
                         <div className={`${styles.navBar} flex mx-1 h-full`}>
                             <img src={appData.icon || appData.iconLarge} className="mx-1" width="14" height="14" />
-                            <input ref={inputFieldRef} className={`${styles.navBar} h-full`} type="text" defaultValue={HOMEPAGE} onKeyDown={keyDownHandler} />
+                            <input ref={inputFieldRef} className={`${styles.navBar} h-full`} type="text" defaultValue={HOMEPAGE === IE_HOME_URL ? "" : HOMEPAGE} onKeyDown={keyDownHandler} />
                             <button className={styles.dropDown} onClick={submitURLHandler}>Submit</button>
                         </div>
                         <button className={`${styles.goButton} flex items-center`} onClick={submitURLHandler}>
@@ -222,13 +226,29 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
                 </section>
             </div>
             <main className={`${styles.mainContent} h-full flex overflow-auto`}>
-                <iframe
-                    src={iframeSrc}
-                    width="100%"
-                    height="100%"
-                    sandbox="allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
-                    referrerPolicy="no-referrer-when-downgrade"
-                />
+                {isHomeVisible && (
+                    <section className={styles.homePage}>
+                        <img src="/icon__internet_explorer--large.png" alt="" width="64" height="64" />
+                        <h2>Internet Explorer</h2>
+                        <p>Digite um endereco ou escolha um favorito.</p>
+                        <div>
+                            {IE_FAVORITES.map((favorite) => (
+                                <button key={favorite.url} type="button" onClick={() => favoriteClickHandler(favorite.url)}>
+                                    {favorite.label}
+                                </button>
+                            ))}
+                        </div>
+                    </section>
+                )}
+                {!isHomeVisible && (
+                    <iframe
+                        src={iframeSrc}
+                        width="100%"
+                        height="100%"
+                        allow="autoplay; fullscreen; clipboard-read; clipboard-write; encrypted-media; gamepad; pointer-lock"
+                        referrerPolicy="no-referrer-when-downgrade"
+                    />
+                )}
             </main >
             <div className={`${styles.statusBar} flex justify-between px-2 py-0.5`}>
                 <div className="flex items-center gap-1">

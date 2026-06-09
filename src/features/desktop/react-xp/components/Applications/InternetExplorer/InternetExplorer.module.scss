@@ -199,6 +199,58 @@
     }
 }
 
+.homePage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    min-height: 100%;
+    width: 100%;
+    padding: 2.4rem;
+    background:
+        linear-gradient(180deg, #fff, #edf5ff 62%, #dbeaff),
+        #fff;
+    color: #153b78;
+    text-align: center;
+
+    h2 {
+        margin: 0;
+        color: #214f9f;
+        font-size: 2.2rem;
+        font-weight: 700;
+    }
+
+    p {
+        margin: 0 0 0.8rem;
+        color: #333;
+        font-size: 1.2rem;
+    }
+
+    div {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.6rem;
+        max-width: 52rem;
+    }
+
+    button {
+        padding: 0.4rem 0.8rem;
+        border: 0.1rem solid #7b9bc1;
+        background: linear-gradient(180deg, #fff, #dce9f6);
+        box-shadow: inset 0.1rem 0.1rem 0 #fff, 0.1rem 0.1rem 0 #9bb1c7;
+        color: #0645ad;
+        font-size: 1.1rem;
+        cursor: pointer;
+
+        &:active {
+            box-shadow: inset 0.1rem 0.1rem 0.2rem #9bb1c7;
+            transform: translate(0.1rem, 0.1rem);
+        }
+    }
+}
+
 .statusBar {
     color: #000;
     background-color: #ebe9da;
