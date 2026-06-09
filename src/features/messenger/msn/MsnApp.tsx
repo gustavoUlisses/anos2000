@@ -54,6 +54,10 @@ export function MsnApp({ onClose, onTaskbarItemsChange }: MsnAppProps) {
   }, []);
 
   function closeLoginWindow() {
+    if (profile) {
+      void messenger.logout();
+    }
+
     setShowLoginWindow(false);
 
     if (!openChats.length) {

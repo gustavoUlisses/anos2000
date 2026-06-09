@@ -16,6 +16,8 @@ import type {
 const clientIdStorageKey = "anos2000:msn:client-id";
 const profileStorageKey = "anos2000:msn:profile";
 const gusDevId = "gusdev-offline";
+const presenceHeartbeatMs = 12_000;
+const presenceStaleMs = 30_000;
 const nudgeSendCooldownMs = 5_000;
 const nudgeReceiveCooldownMs = 2_000;
 
@@ -199,6 +201,11 @@ function isPresenceStatusPayload(value: unknown): value is PresenceStatusPayload
     candidate.status === "offline" &&
     Boolean(candidate.profile?.id && candidate.profile.nick)
   );
+}
+
+function isProfileFresh(profile: MsnProfile, now: number) {
+  const lastSeenAt = new Date(profile.lastSeenAt).getTime();
+  return Number.isFinite(lastSeenAt) && now - lastSeenAt <= presenceStaleMs;
 }
 
 function dedupeMessages(messages: MsnMessage[]) {
@@ -394,6 +401,7 @@ export function useMsnRealtime() {
   const [nudges, setNudges] = useState<MsnNudgeEvent[]>([]);
   const [onlineLogins, setOnlineLogins] = useState<MsnOnlineEvent[]>([]);
   const [hasPresenceSynced, setHasPresenceSynced] = useState(false);
+  const [presenceNow, setPresenceNow] = useState(() => Date.now());
   const [onlineProfiles, setOnlineProfiles] = useState<MsnProfile[]>([]);
   const [profile, setProfile] = useState<MsnProfile | null>(() => {
     if (typeof window === "undefined") {
@@ -406,6 +414,16 @@ export function useMsnRealtime() {
   useEffect(() => {
     blockedContactIdsRef.current = new Set(blockedContacts.map((contact) => contact.id));
   }, [blockedContacts]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setPresenceNow(Date.now());
+    }, 5_000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
 
   useEffect(() => {
     if (!profile) {
@@ -542,7 +560,7 @@ export function useMsnRealtime() {
         ...profile,
         lastSeenAt: new Date().toISOString(),
       });
-    }, 25_000);
+    }, presenceHeartbeatMs);
 
     function untrackPresence() {
       void announceOffline(channel, profile);
@@ -756,7 +774,10 @@ export function useMsnRealtime() {
     }
 
     const visibleOnlineProfiles = supabase ? onlineProfiles : profile ? [profile] : [];
-    const onlineContacts: MsnContact[] = visibleOnlineProfiles
+    const freshOnlineProfiles = visibleOnlineProfiles.filter((onlineProfile) => (
+      onlineProfile.id === profile.id || isProfileFresh(onlineProfile, presenceNow)
+    ));
+    const onlineContacts: MsnContact[] = freshOnlineProfiles
       .filter((onlineProfile) => onlineProfile.id !== profile.id)
       .map((onlineProfile) => ({
         avatar: "/msn/images/user.png",
@@ -784,7 +805,7 @@ export function useMsnRealtime() {
     const blockedIds = new Set(blockedContacts.map((contact) => contact.id));
 
     return [...onlineContacts, ...offlineContacts].filter((contact) => !blockedIds.has(contact.id));
-  }, [blockedContacts, onlineProfiles, profile, supabase]);
+  }, [blockedContacts, onlineProfiles, presenceNow, profile, supabase]);
 
   const getConversation = useCallback((contactId: string) => {
     if (!profile) {
@@ -802,8 +823,10 @@ export function useMsnRealtime() {
   }, [messages, profile]);
 
   const onlineProfileIds = useMemo(() => (
-    onlineProfiles.map((onlineProfile) => onlineProfile.id)
-  ), [onlineProfiles]);
+    onlineProfiles
+      .filter((onlineProfile) => isProfileFresh(onlineProfile, presenceNow))
+      .map((onlineProfile) => onlineProfile.id)
+  ), [onlineProfiles, presenceNow]);
 
   return {
     addSystemMessage,
