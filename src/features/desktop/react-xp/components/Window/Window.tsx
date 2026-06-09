@@ -17,7 +17,7 @@ const applications = applicationsJSON as unknown as Record<string, Application>;
 
 const Window = ({ ...props }: WindowProps) => {
     const { id, appId, children, active = false, hidden = false } = props;
-    const { title, icon, iconLarge, showOnTaskbar = true, width = 500, height = 350, top = 75, right = undefined, bottom = undefined, left = 100, resizable = true } = { ...applications[appId] };
+    const { title, icon, iconLarge, showOnTaskbar = true, width = 500, height = 350, top = 75, right = undefined, bottom = undefined, left = 100, resizable = true, maximizable = true } = { ...applications[appId] };
     const { currentWindows, dispatch } = useContext();
 
     const dragWindowPadding = (window.innerWidth < 500) ? 12 : 3;
@@ -57,6 +57,7 @@ const Window = ({ ...props }: WindowProps) => {
     }, [offset, width]);
 
     const toggleMaximizeWindow = (activeWindow: HTMLElement | null) => {
+        if (!maximizable) return;
         if (!activeWindow) return;
         if (isMaximized) setIsMaximized(false);
         else {
@@ -251,7 +252,7 @@ const Window = ({ ...props }: WindowProps) => {
                             {resizable && (
                                 <>
                                     <button onClick={onButtonClick} data-button="minimize">Minimise</button>
-                                    <button onClick={onButtonClick} data-button="maximize" data-maximized={isMaximized}>Maximise</button>
+                                    {maximizable && <button onClick={onButtonClick} data-button="maximize" data-maximized={isMaximized}>Maximise</button>}
                                 </>
                             )}
                             <button onClick={onButtonClick} data-button="close">Close</button>

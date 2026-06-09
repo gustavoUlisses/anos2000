@@ -59,7 +59,8 @@
         "height": 620,
         "width": 980,
         "top": 35,
-        "left": 130
+        "left": 130,
+        "maximizable": false
     },
     "recentDocuments": {
         "title": "My Recent Documents",

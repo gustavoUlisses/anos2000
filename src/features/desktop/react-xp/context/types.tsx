@@ -50,6 +50,7 @@ export interface Application {
     disabled?: boolean;
     redirect?: string;
     resizable?: boolean;
+    maximizable?: boolean;
     showOnTaskbar?: boolean;
 }
 
