@@ -183,7 +183,7 @@ export function MainWindowLogged({
       </div>
       <div className="logged-window-ad">
         <span>Advertisement</span>
-        <img src="https://gifdb.com/images/high/microsoft-internet-explorer-admk702irl7ymxag.webp" alt="Ads" className="w-75" />
+        <img src="/msn/images/banner.gif" alt="Ads" className="w-75" />
       </div>
       <div className="msn-account-footer py-1 d-flex align-items-center justify-content-between w-100">
         <button className="logout-button" onClick={onLogout} type="button">
