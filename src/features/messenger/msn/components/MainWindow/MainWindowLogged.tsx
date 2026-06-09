@@ -31,7 +31,7 @@ export function MainWindowLogged({
   onUnblockContact,
   profile,
 }: MainWindowLoggedProps) {
-  const personalMessage = profile.personalMessage.trim() || (profile.isAdmin ? "Criador do projeto" : "");
+  const personalMessage = profile.personalMessage.trim() || (profile.isAdmin ? "@gus.dev" : "");
   const [draftMessage, setDraftMessage] = useState(personalMessage);
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
   const [isEditingMessage, setIsEditingMessage] = useState(false);

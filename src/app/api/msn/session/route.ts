@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       last_seen_at: new Date().toISOString(),
       nick,
       personal_message: normalizePersonalMessage(
-        parsedBody.data.personalMessage ?? (isGusDev ? "Criador do projeto" : undefined),
+        parsedBody.data.personalMessage ?? (isGusDev ? "@gus.dev" : undefined),
       ),
     };
 
