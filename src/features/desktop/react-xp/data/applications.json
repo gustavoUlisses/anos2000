@@ -18,9 +18,10 @@
         "title": "Bate-Papo UOL",
         "icon": "/apps/uol-chat/uol-chat.svg",
         "iconLarge": "/apps/uol-chat/uol-chat.svg",
-        "component": "UolChat",
-        "height": 520,
-        "width": 760,
+        "openWith": "internetExplorer",
+        "landingUrl": "https://batepapo.uol.com.br/anos2000",
+        "height": 540,
+        "width": 820,
         "top": 45,
         "left": 90
     },

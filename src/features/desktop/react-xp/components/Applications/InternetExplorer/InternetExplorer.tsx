@@ -1,7 +1,8 @@
 import { useRef, useState, useEffect } from "react";
 import { useContext } from "../../../context/context";
+import { UolChatApp } from "@/features/uol-chat/UolChatApp";
 import applicationsJSON from "../../../data/applications.json";
-import { getCurrentWindow, openApplication } from "../../../utils/general";
+import { getCurrentWindow } from "../../../utils/general";
 import WindowMenu from "../../WindowMenu/WindowMenu";
 import styles from "./InternetExplorer.module.scss";
 import type { Application } from "../../../context/types";
@@ -11,6 +12,8 @@ const IE_HOME_URL = "about:blank";
 const DEFAULT_WAYBACK_YEAR = 2011;
 const WAYBACK_YEARS = Array.from({ length: 21 }, (_, index) => 2000 + index);
 const DIRECT_ALLOWED_URLS = ["https://yorgute.com/inicio"];
+const UOL_CHAT_DISPLAY_URL = "https://batepapo.uol.com.br/anos2000";
+const UOL_CHAT_INTERNAL_URL = "anos2000://bate-papo-uol";
 
 type IeFavorite = {
     appId?: never;
@@ -24,14 +27,25 @@ type IeFavorite = {
 
 const IE_FAVORITES: IeFavorite[] = [
     { label: "Orkut", url: "https://yorgute.com/inicio" },
-    { appId: "uolChat", label: "Bate-Papo UOL" },
+    { label: "Bate-Papo UOL", url: UOL_CHAT_DISPLAY_URL },
 ];
 
 const normalizeUrl = (inputValue: string) => {
     const trimmed = inputValue.trim();
     if (!trimmed) return IE_HOME_URL;
-    if (/^https?:\/\//i.test(trimmed) || trimmed === "about:blank" || trimmed === IE_HOME_URL) return trimmed;
+    if (
+        /^https?:\/\//i.test(trimmed) ||
+        trimmed === "about:blank" ||
+        trimmed === IE_HOME_URL ||
+        trimmed === UOL_CHAT_INTERNAL_URL
+    ) return trimmed;
     return `https://${trimmed}`;
+};
+
+const isUolChatUrl = (url: string) => {
+    const normalized = normalizeUrl(url).replace(/\/$/, "").toLowerCase();
+    const displayUrl = UOL_CHAT_DISPLAY_URL.replace(/\/$/, "").toLowerCase();
+    return normalized === UOL_CHAT_INTERNAL_URL || normalized === displayUrl || normalized.startsWith(`${displayUrl}/`);
 };
 
 const isDirectAllowed = (url: string) => {
@@ -45,6 +59,10 @@ const isDirectAllowed = (url: string) => {
 
 const getIframeSrc = (inputValue: string, waybackYear: number) => {
     const value = normalizeUrl(inputValue);
+    if (isUolChatUrl(value)) {
+        return { url: UOL_CHAT_INTERNAL_URL, value: UOL_CHAT_DISPLAY_URL };
+    }
+
     const shouldUseWayback = value !== "about:blank" && value !== IE_HOME_URL && !isDirectAllowed(value);
     const timestamp = `${waybackYear}0601000000id_`;
     const url = shouldUseWayback ? `https://web.archive.org/web/${timestamp}/${value}` : value;
@@ -75,12 +93,14 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
     const appData = Applications[appId];
 
     const updateIframe = (inputValue = inputFieldRef.current?.value || HOMEPAGE, waybackYear = selectedYear) => {
-        const { url } = getIframeSrc(inputValue, waybackYear);
+        const { url, value } = getIframeSrc(inputValue, waybackYear);
+        const inputField = inputFieldRef.current;
+        if (inputField && value === UOL_CHAT_DISPLAY_URL) inputField.value = value;
         setIframeSrc(url);
     };
 
     const navigateTo = (nextInputValue: string, addToHistory = true) => {
-        const nextValue = normalizeUrl(nextInputValue);
+        const nextValue = getIframeSrc(nextInputValue, selectedYear).value;
         const inputField = inputFieldRef.current;
 
         if (inputField) inputField.value = nextValue === IE_HOME_URL ? "" : nextValue;
@@ -142,11 +162,6 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
     };
 
     const favoriteClickHandler = (favorite: typeof IE_FAVORITES[number]) => {
-        if (favorite.appId) {
-            openApplication(favorite.appId, currentWindows, dispatch);
-            return;
-        }
-
         if (favorite.url) {
             navigateTo(favorite.url);
         }
@@ -251,13 +266,17 @@ const InternetExplorer = ({ appId }: Record<string, string>) => {
                 </section>
             </div>
             <main className={`${styles.mainContent} h-full flex overflow-auto`}>
-                <iframe
-                    src={iframeSrc}
-                    width="100%"
-                    height="100%"
-                    allow="autoplay; fullscreen; clipboard-read; clipboard-write; encrypted-media; gamepad; pointer-lock"
-                    referrerPolicy="no-referrer-when-downgrade"
-                />
+                {iframeSrc === UOL_CHAT_INTERNAL_URL ? (
+                    <UolChatApp />
+                ) : (
+                    <iframe
+                        src={iframeSrc}
+                        width="100%"
+                        height="100%"
+                        allow="autoplay; fullscreen; clipboard-read; clipboard-write; encrypted-media; gamepad; pointer-lock"
+                        referrerPolicy="no-referrer-when-downgrade"
+                    />
+                )}
             </main >
             <div className={`${styles.statusBar} flex justify-between px-2 py-0.5`}>
                 <div className="flex items-center gap-1">

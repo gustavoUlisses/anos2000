@@ -11,6 +11,10 @@ const presenceHeartbeatMs = 12_000;
 const presenceStaleMs = 30_000;
 
 type PresencePayload = UolProfile;
+type PresenceStatusPayload = {
+  profile: UolProfile;
+  status: "offline";
+};
 
 function createId() {
   if (crypto.randomUUID) {
@@ -70,6 +74,12 @@ function isUolMessage(value: unknown): value is UolMessage {
     typeof candidate.senderId === "string" &&
     typeof candidate.senderNick === "string"
   );
+}
+
+function isPresenceStatusPayload(value: unknown): value is PresenceStatusPayload {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<PresenceStatusPayload>;
+  return candidate.status === "offline" && isUolProfile(candidate.profile);
 }
 
 function getStoredProfile() {
@@ -133,6 +143,7 @@ async function createSessionProfile(clientId: string, nick: string) {
 
     if (!response.ok) {
       if (response.status === 403) throw new Error("Esse apelido esta reservado.");
+      if (response.status === 409) throw new Error("Esse apelido ja esta em uso na sala.");
       return fallbackProfile;
     }
 
@@ -167,6 +178,35 @@ async function persistMessage(message: UolMessage) {
     body: JSON.stringify(message),
     headers: { "Content-Type": "application/json" },
     method: "POST",
+  }).catch(() => undefined);
+}
+
+async function persistHeartbeat(profileId: string) {
+  await fetch("/api/uol/session", {
+    body: JSON.stringify({ clientId: profileId }),
+    headers: { "Content-Type": "application/json" },
+    method: "PATCH",
+  }).catch(() => undefined);
+}
+
+async function persistLogout(profileId: string) {
+  await fetch("/api/uol/session", {
+    body: JSON.stringify({ clientId: profileId }),
+    headers: { "Content-Type": "application/json" },
+    method: "DELETE",
+  }).catch(() => undefined);
+}
+
+async function announceOffline(channel: RealtimeChannel | null, profile: UolProfile | null) {
+  if (!channel || !profile) return;
+
+  await channel.send({
+    event: "presence-status",
+    payload: {
+      profile,
+      status: "offline",
+    },
+    type: "broadcast",
   }).catch(() => undefined);
 }
 
@@ -209,9 +249,10 @@ export function useUolChat() {
   useEffect(() => {
     if (!profile || !supabase) return;
 
+    const activeProfile = profile;
     const channel = supabase.channel("uol-chat-geral", {
       config: {
-        presence: { key: profile.id },
+        presence: { key: activeProfile.id },
       },
     });
     channelRef.current = channel;
@@ -232,24 +273,31 @@ export function useUolChat() {
         if (!isUolMessage(payload)) return;
         setMessages((current) => dedupeMessages([...current, payload]));
       })
+      .on("broadcast", { event: "presence-status" }, ({ payload }: { payload: unknown }) => {
+        if (!isPresenceStatusPayload(payload) || payload.profile.id === activeProfile.id) return;
+        setOnlineProfiles((current) => current.filter((onlineProfile) => onlineProfile.id !== payload.profile.id));
+      })
       .subscribe(async (status) => {
         if (status !== "SUBSCRIBED") return;
 
         await channel.track({
-          ...profile,
+          ...activeProfile,
           lastSeenAt: new Date().toISOString(),
         });
       });
 
     const heartbeat = window.setInterval(() => {
       void channel.track({
-        ...profile,
+        ...activeProfile,
         lastSeenAt: new Date().toISOString(),
       });
+      void persistHeartbeat(activeProfile.id);
     }, presenceHeartbeatMs);
 
     function untrackPresence() {
+      void announceOffline(channel, activeProfile);
       void channel.untrack();
+      void persistLogout(activeProfile.id);
     }
 
     window.addEventListener("beforeunload", untrackPresence);
@@ -260,7 +308,9 @@ export function useUolChat() {
       window.removeEventListener("beforeunload", untrackPresence);
       window.removeEventListener("pagehide", untrackPresence);
       channelRef.current = null;
+      void announceOffline(channel, activeProfile);
       void channel.untrack();
+      void persistLogout(activeProfile.id);
       void supabase.removeChannel(channel);
     };
   }, [profile, supabase]);
@@ -276,10 +326,16 @@ export function useUolChat() {
   const logout = useCallback(async () => {
     const channel = channelRef.current;
 
+    await announceOffline(channel, profile);
+
     if (channel) {
       await channel.untrack().catch(() => undefined);
       channelRef.current = null;
       void supabase?.removeChannel(channel);
+    }
+
+    if (profile) {
+      await persistLogout(profile.id);
     }
 
     clearStoredSession();
@@ -287,7 +343,7 @@ export function useUolChat() {
     setMessages([]);
     setOnlineProfiles([]);
     setProfile(null);
-  }, [supabase]);
+  }, [profile, supabase]);
 
   const sendMessage = useCallback(async (rawMessage: string) => {
     if (!profile) return false;

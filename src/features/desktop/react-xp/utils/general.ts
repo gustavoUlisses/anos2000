@@ -1,5 +1,9 @@
 import type { currentWindow } from "../context/types";
 import type { Action } from "../context/types";
+import applicationsJSON from "../data/applications.json";
+import type { Application } from "../context/types";
+
+const applications = applicationsJSON as unknown as Record<string, Application>;
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 export const throttle = (fn: Function, delay: number) => {
@@ -37,6 +41,8 @@ export const updateCurrentActiveWindow = (windowId: string | number, currentWind
 };
 
 export const openApplication = (appId: string, currentWindows: currentWindow[], dispatch: (value: Action) => void) => {
+    const application = applications[appId];
+
     if (appId === "msn") {
         dispatch({ type: "SET_IS_MESSENGER_OPEN", payload: true });
         dispatch({ type: "SET_IS_START_VISIBLE", payload: false });
@@ -51,10 +57,15 @@ export const openApplication = (appId: string, currentWindows: currentWindow[], 
 
     const newWindow: currentWindow = {
         id: generateUniqueId(),
-        appId,
+        appId: application?.openWith || appId,
         active: true,
         history: [],
-        forward: []
+        forward: [],
+        height: application?.height,
+        landingUrl: application?.landingUrl,
+        left: application?.left,
+        top: application?.top,
+        width: application?.width,
     };
     const updatedCurrentWindows = currentWindows.filter((item) => item.appId !== "run");
     updatedCurrentWindows.push(newWindow);

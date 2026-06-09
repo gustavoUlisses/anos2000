@@ -47,7 +47,15 @@ export interface Application {
     content: ReactNode | string;
     component?: string | undefined;
     embedUrl?: string;
+    landingUrl?: string;
     link?: string;
+    openWith?: string;
+    width?: number;
+    height?: number;
+    top?: number;
+    right?: number;
+    bottom?: number;
+    left?: number;
     disabled?: boolean;
     redirect?: string;
     resizable?: boolean;
